@@ -1,0 +1,32 @@
+################################################################################
+##                                                                            ##
+##   >>>  SALIDA DEL ANALIZADOR SEMANTICO  —  COMPILACION DETENIDA  <<<       ##
+##                                                                            ##
+################################################################################
+
+Fecha y hora: 2026-05-13T18:32:02.9003469
+Archivo fuente: C:\Users\Juani\Documents\GitHub\tecnicascompilacion2026\cpp compiler\profesora.cpp
+Informe generado: C:\Users\Juani\Documents\GitHub\tecnicascompilacion2026\cpp compiler\salida_compilador_semantico.txt
+
+--------------------------------------------------------------------------------
+  RESUMEN: 1 errores, 3 warnings
+--------------------------------------------------------------------------------
+
+WARNINGS:
+  [WARNING] linea 25, col 5: la variable 'temp' oculta una declaración externa
+  [WARNING] linea 12, col 6: variable declarada y nunca usada: activo
+  [WARNING] linea 13, col 5: variable declarada y nunca usada: temp
+
+ERRORES:
+  [ERROR] linea 33, col 5: identificador no declarado: variableQueNuncaSeDeclaro
+
+--------------------------------------------------------------------------------
+  CASOS DE PRUEBA EN profesora.cpp (descomentar para activar)
+--------------------------------------------------------------------------------
+[ERR-1] variableQueNuncaSeDeclaro = ...  → identificador no declarado
+[ERR-2] temp = true;                     → tipos incompatibles (bool → int)
+[ERR-3] estado = sumar(temp);            → aridad incorrecta en llamada
+[ERR-4] temp = temp && true;             → && exige BOOL en ambos lados
+[ERR-5] return true;                     → return incompatible con int
+
+################################################################################
