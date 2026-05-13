@@ -23,6 +23,12 @@
             <artifactId>antlr4-runtime</artifactId>
             <version>${antlr.version}</version>
         </dependency>
+        <!-- Jar completo de ANTLR: necesario para org.antlr.v4.gui.Trees.inspect (visualización del árbol). -->
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr4</artifactId>
+            <version>${antlr.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

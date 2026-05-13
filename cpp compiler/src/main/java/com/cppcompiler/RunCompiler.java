@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -21,6 +23,7 @@ import org.antlr.v4.runtime.Recognizer;
 import com.cppcompiler.lexer.CPPSubsetLexer;
 import com.cppcompiler.parser.CPPSubsetParser;
 import com.cppcompiler.parser.CPPSubsetParser.ProgramContext;
+import com.cppcompiler.semantic.Diagnostic;
 import com.cppcompiler.semantic.SemanticAnalyzer;
 import com.cppcompiler.symtab.SymbolTableBuilder;
 import com.cppcompiler.tac.SimpleTacOptimizer;
@@ -29,23 +32,42 @@ import com.cppcompiler.tac.TacGenerator;
 import com.cppcompiler.tac.TacProgram;
 
 /**
- * Análisis sintáctico + tabla de símbolos + TAC (+ optimización básica).
+ * Pipeline completo: parser + visualización del árbol + tabla de símbolos +
+ * análisis semántico (errores y warnings) + TAC (+ optimización básica).
  *
- * <p>Uso: {@code java -cp ... com.cppcompiler.RunCompiler archivo.cpp}
+ * <p>Uso: {@code java -cp ... com.cppcompiler.RunCompiler <archivo.cpp> [--no-gui]}.
+ * Por defecto se abre la ventana gráfica con el árbol sintáctico; usar {@code --no-gui}
+ * para suprimirla (útil en entornos sin display).
  */
 public final class RunCompiler {
 
     private static final String SEMANTIC_OUTPUT = "salida_compilador_semantico.txt";
+    private static final String TREE_OUTPUT = "arbol_sintactico.txt";
 
     private RunCompiler() {}
 
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
-            System.err.println("Uso: RunCompiler <archivo.cpp>");
+            System.err.println("Uso: RunCompiler <archivo.cpp> [--no-gui]");
             System.exit(2);
             return;
         }
-        Path path = Paths.get(args[0]);
+        boolean showGui = true;
+        String sourceArg = null;
+        for (String a : args) {
+            if ("--no-gui".equalsIgnoreCase(a)) {
+                showGui = false;
+            } else if (sourceArg == null) {
+                sourceArg = a;
+            }
+        }
+        if (sourceArg == null) {
+            System.err.println("Uso: RunCompiler <archivo.cpp> [--no-gui]");
+            System.exit(2);
+            return;
+        }
+
+        Path path = Paths.get(sourceArg);
         if (!Files.isRegularFile(path)) {
             System.err.println("No existe el archivo: " + path);
             System.exit(2);
@@ -55,7 +77,7 @@ public final class RunCompiler {
         System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
         System.setErr(new PrintStream(System.err, true, StandardCharsets.UTF_8));
 
-        System.out.println("=== com.cppcompiler.RunCompiler (parser + tabla + semantica + TAC) ===");
+        System.out.println("=== com.cppcompiler.RunCompiler (parser + arbol + tabla + semantica + TAC) ===");
         System.out.println("Archivo: " + path.toAbsolutePath());
         System.out.println();
 
@@ -88,6 +110,8 @@ public final class RunCompiler {
             return;
         }
 
+        printAndSaveParseTree(tree, parser, path, showGui);
+
         SymbolTableBuilder sym = new SymbolTableBuilder();
         sym.visit(tree);
         System.out.println(SymbolTableBuilder.formatTable(sym.getRows()));
@@ -98,23 +122,27 @@ public final class RunCompiler {
         System.out.flush();
 
         SemanticAnalyzer sem = new SemanticAnalyzer();
-        try {
-            sem.visitProgram(tree);
-            System.out.println("Análisis semántico: OK (tipos y ámbitos).");
-            Path semOut = semanticReportPath(path);
-            Path semOutCwd = Paths.get(System.getProperty("user.dir")).resolve(SEMANTIC_OUTPUT);
-            Files.deleteIfExists(semOut);
-            Files.deleteIfExists(semOutCwd);
-        } catch (Throwable ex) {
-            String msg = ex.getMessage() != null ? ex.getMessage() : ex.getClass().getName();
-            System.err.println("Error semántico: " + msg);
-            System.out.println();
-            System.out.println("*** ERROR SEMANTICO *** " + msg);
-            ex.printStackTrace(System.err);
-            writeSemanticErrorReport(path, msg, ex);
+        sem.visitProgram(tree);
+
+        sem.diagnostics().printAll(System.out);
+        int errs = sem.diagnostics().errorCount();
+        int warns = sem.diagnostics().warningCount();
+        System.out.println();
+        System.out.printf(Locale.ROOT, "Resumen semantico: %d errores, %d warnings.%n", errs, warns);
+        System.out.flush();
+
+        if (sem.diagnostics().hasErrors()) {
+            writeSemanticReport(path, sem.diagnostics().errors(), sem.diagnostics().warnings());
             System.exit(1);
             return;
         }
+
+        // Sin errores: limpiamos un informe previo y continuamos con la generación de TAC.
+        Path semOut = semanticReportPath(path);
+        Path semOutCwd = Paths.get(System.getProperty("user.dir")).resolve(SEMANTIC_OUTPUT);
+        Files.deleteIfExists(semOut);
+        Files.deleteIfExists(semOutCwd);
+        System.out.println("Análisis semántico: OK (tipos y ámbitos).");
         System.out.println();
         System.out.flush();
 
@@ -138,6 +166,54 @@ public final class RunCompiler {
                         "Archivo: ejemplo_codigo_optimizado.txt"));
     }
 
+    /** Imprime el árbol en formato LISP, lo guarda en disco y abre la GUI salvo --no-gui. */
+    private static void printAndSaveParseTree(
+            ProgramContext tree, CPPSubsetParser parser, Path sourceFile, boolean showGui) {
+        List<String> ruleNames = Arrays.asList(parser.getRuleNames());
+        String lisp = tree.toStringTree(parser);
+
+        System.out.println(">>> Arbol sintactico (formato LISP)");
+        System.out.println("-----------------------------------");
+        System.out.println(lisp);
+        System.out.println();
+
+        Path treeOut = treeOutputPath(sourceFile);
+        try (PrintWriter w = new PrintWriter(Files.newBufferedWriter(treeOut, StandardCharsets.UTF_8))) {
+            w.println("Archivo fuente: " + sourceFile.toAbsolutePath());
+            w.println("Fecha: " + DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now()));
+            w.println();
+            w.println("Arbol sintactico (formato LISP):");
+            w.println(lisp);
+        } catch (IOException ex) {
+            System.err.println("No se pudo escribir " + treeOut + ": " + ex.getMessage());
+        }
+        System.out.println("Arbol sintactico guardado en: " + treeOut.toAbsolutePath());
+        System.out.flush();
+
+        if (!showGui) {
+            return;
+        }
+        try {
+            Class<?> treesCls = Class.forName("org.antlr.v4.gui.Trees");
+            treesCls.getMethod("inspect", org.antlr.v4.runtime.tree.Tree.class, List.class)
+                    .invoke(null, tree, ruleNames);
+            System.out.println("Ventana grafica del arbol sintactico abierta (cerrarla para terminar el proceso).");
+        } catch (ClassNotFoundException ex) {
+            System.err.println(
+                    "Aviso: org.antlr.v4.gui.Trees no esta en el classpath; se omite la ventana. "
+                            + "Agregar la dependencia 'org.antlr:antlr4:4.13.2' en pom.xml.");
+        } catch (java.awt.HeadlessException ex) {
+            System.err.println("Aviso: entorno headless, no se puede abrir la ventana del arbol.");
+        } catch (ReflectiveOperationException ex) {
+            Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+            if (cause instanceof java.awt.HeadlessException) {
+                System.err.println("Aviso: entorno headless, no se puede abrir la ventana del arbol.");
+            } else {
+                System.err.println("Aviso: no se pudo abrir la ventana del arbol: " + cause.getMessage());
+            }
+        }
+    }
+
     private static Path semanticReportPath(Path sourceFile) {
         Path parent = sourceFile.toAbsolutePath().getParent();
         if (parent == null) {
@@ -146,21 +222,31 @@ public final class RunCompiler {
         return parent.resolve(SEMANTIC_OUTPUT);
     }
 
-    /**
-     * Informe visible en disco cuando falla el analizador semántico.
-     */
-    private static void writeSemanticErrorReport(Path sourceFile, String errorMessage, Throwable cause) {
+    private static Path treeOutputPath(Path sourceFile) {
+        Path parent = sourceFile.toAbsolutePath().getParent();
+        if (parent == null) {
+            return Paths.get(TREE_OUTPUT).toAbsolutePath();
+        }
+        return parent.resolve(TREE_OUTPUT);
+    }
+
+    /** Informe en disco con TODOS los errores (y warnings) acumulados por el analizador. */
+    private static void writeSemanticReport(Path sourceFile, List<Diagnostic> errors, List<Diagnostic> warnings) {
         Path outNextToSource = semanticReportPath(sourceFile);
         Path outInCwd = Paths.get(System.getProperty("user.dir")).resolve(SEMANTIC_OUTPUT);
         String ts = DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.now());
-        writeSemanticErrorReportToPath(outNextToSource, sourceFile, errorMessage, cause, ts);
+        List<Path> targets = new ArrayList<>();
+        targets.add(outNextToSource);
         if (!outNextToSource.toAbsolutePath().equals(outInCwd.toAbsolutePath())) {
-            writeSemanticErrorReportToPath(outInCwd, sourceFile, errorMessage, cause, ts);
+            targets.add(outInCwd);
+        }
+        for (Path out : targets) {
+            writeSemanticReportToPath(out, sourceFile, errors, warnings, ts);
         }
     }
 
-    private static void writeSemanticErrorReportToPath(
-            Path out, Path sourceFile, String errorMessage, Throwable cause, String ts) {
+    private static void writeSemanticReportToPath(
+            Path out, Path sourceFile, List<Diagnostic> errors, List<Diagnostic> warnings, String ts) {
         try (PrintWriter w = new PrintWriter(Files.newBufferedWriter(out, StandardCharsets.UTF_8))) {
             w.println("################################################################################");
             w.println("##                                                                            ##");
@@ -173,19 +259,25 @@ public final class RunCompiler {
             w.println("Informe generado: " + out.toAbsolutePath());
             w.println();
             w.println("--------------------------------------------------------------------------------");
-            w.println("  MENSAJE DEL ERROR (primer fallo detectado)");
+            w.printf(Locale.ROOT, "  RESUMEN: %d errores, %d warnings%n", errors.size(), warnings.size());
             w.println("--------------------------------------------------------------------------------");
-            w.println(errorMessage);
             w.println();
-            if (cause != null) {
-                w.println("--------------------------------------------------------------------------------");
-                w.println("  PILA (stack trace)");
-                w.println("--------------------------------------------------------------------------------");
-                cause.printStackTrace(w);
+            if (!warnings.isEmpty()) {
+                w.println("WARNINGS:");
+                for (Diagnostic d : warnings) {
+                    w.println("  " + d);
+                }
+                w.println();
+            }
+            if (!errors.isEmpty()) {
+                w.println("ERRORES:");
+                for (Diagnostic d : errors) {
+                    w.println("  " + d);
+                }
                 w.println();
             }
             w.println("--------------------------------------------------------------------------------");
-            w.println("  CASOS DE PRUEBA EN profesora.cpp (activar uno a la vez)");
+            w.println("  CASOS DE PRUEBA EN profesora.cpp (descomentar para activar)");
             w.println("--------------------------------------------------------------------------------");
             w.println("[ERR-1] variableQueNuncaSeDeclaro = ...  → identificador no declarado");
             w.println("[ERR-2] temp = true;                     → tipos incompatibles (bool → int)");

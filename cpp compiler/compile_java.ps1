@@ -44,8 +44,10 @@ if ($RegenerateParser -or -not (Test-Path (Join-Path $parserDir "CPPSubsetParser
 
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 $sources = @(Get-ChildItem -Path $srcRoot -Recurse -Filter "*.java" | ForEach-Object { $_.FullName })
-& javac -encoding UTF-8 -cp $runtimeJar -d $outDir @sources
+# El jar completo aporta org.antlr.v4.gui.Trees (visualización del árbol sintáctico).
+$compileCp = "$runtimeJar;$antlrJar"
+& javac -encoding UTF-8 -cp $compileCp -d $outDir @sources
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Write-Host "OK: clases en $outDir"
 Write-Host "Lexer:  java -cp `"$outDir;$runtimeJar`" com.cppcompiler.lexer.RunCppLexer ejemplo_entrada.cpp"
-Write-Host "Compilador: java -cp `"$outDir;$runtimeJar`" com.cppcompiler.RunCompiler profesora.cpp"
+Write-Host "Compilador: java -cp `"$outDir;$antlrJar`" com.cppcompiler.RunCompiler profesora.cpp"

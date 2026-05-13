@@ -1,5 +1,6 @@
 package com.cppcompiler.semantic;
 
+import com.cppcompiler.ast.AstError;
 import com.cppcompiler.ast.AstExpr;
 
 /**
@@ -7,6 +8,8 @@ import com.cppcompiler.ast.AstExpr;
  * el resto de nodos usan {@link #none()}.
  */
 public final class SemanticSynth {
+
+    private static final SemanticSynth ERROR = new SemanticSynth(Type.ERROR, AstError.INSTANCE);
 
     private final Type exprType;
     private final AstExpr expr;
@@ -24,8 +27,20 @@ public final class SemanticSynth {
         return new SemanticSynth(type, ast);
     }
 
+    /**
+     * Centinela para expresiones cuyo análisis semántico falló:
+     * conserva un AST de tipo {@link Type#ERROR} para no romper el flujo bottom-up.
+     */
+    public static SemanticSynth errorExpr() {
+        return ERROR;
+    }
+
     public boolean isExpr() {
         return exprType != null;
+    }
+
+    public boolean isError() {
+        return exprType == Type.ERROR;
     }
 
     public Type exprType() {

@@ -3,7 +3,9 @@ package com.cppcompiler.semantic;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -13,6 +15,7 @@ import com.cppcompiler.ast.AstBoolLiteral;
 import com.cppcompiler.ast.AstCallableRef;
 import com.cppcompiler.ast.AstCallExpr;
 import com.cppcompiler.ast.AstCharLiteral;
+import com.cppcompiler.ast.AstError;
 import com.cppcompiler.ast.AstExpr;
 import com.cppcompiler.ast.AstFloatLiteral;
 import com.cppcompiler.ast.AstIntLiteral;
@@ -24,14 +27,22 @@ import com.cppcompiler.parser.CPPSubsetParserBaseVisitor;
 /**
  * Análisis semántico con SDT bottom-up: cada {@code visit*} devuelve un
  * {@link SemanticSynth} con tipo y AST compacto para expresiones.
+ *
+ * <p>Los problemas se reportan al {@link DiagnosticCollector} y el análisis CONTINÚA
+ * (no se aborta), de modo que un único pase reporte todos los errores y warnings.
  */
 public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticSynth> {
 
     private final ScopedSymbolTable table = new ScopedSymbolTable();
+    private final DiagnosticCollector diagnostics = new DiagnosticCollector();
     private Type currentFunctionReturn = Type.VOID;
 
     public ScopedSymbolTable symbolTable() {
         return table;
+    }
+
+    public DiagnosticCollector diagnostics() {
+        return diagnostics;
     }
 
     @Override
@@ -51,7 +62,8 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
                 visitFuncDeclBody(fd);
             }
         }
-        table.exitScope();
+        Map<String, Symbol> globalScope = table.exitScopeAndCollect();
+        emitUnusedWarnings(globalScope);
         return SemanticSynth.none();
     }
 
@@ -64,7 +76,15 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
                 formals.add(mapTypeName(p.typeName()));
             }
         }
-        table.define(Symbol.function(name, ret, formals));
+        int line = ctx.IDENTIFIER().getSymbol().getLine();
+        int col = ctx.IDENTIFIER().getSymbol().getCharPositionInLine() + 1;
+        Symbol fn = Symbol.function(name, ret, formals, line, col);
+        // Las funciones declaradas en el ámbito global no se reportan como "no usadas"
+        // (main, etc. no se invocan desde el propio archivo); las marcamos como usadas.
+        fn.markUsed();
+        if (!table.define(fn)) {
+            diagnostics.addError("símbolo duplicado en el mismo ámbito: " + name, ctx);
+        }
     }
 
     private void visitFuncDeclBody(CPPSubsetParser.FuncDeclContext ctx) {
@@ -75,33 +95,57 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
                 defineVariableFromParam(p);
             }
         }
-        visitBlock(ctx.block());
-        table.exitScope();
+        // Visitamos el cuerpo sin abrir scope adicional (los parámetros y locales comparten ámbito).
+        for (CPPSubsetParser.StatementContext st : ctx.block().statement()) {
+            visitStatement(st);
+        }
+        // Función no-void: ¿el cuerpo garantiza un return?
+        if (currentFunctionReturn != Type.VOID && !blockGuaranteesReturn(ctx.block())) {
+            diagnostics.addWarning(
+                    "la función '" + ctx.IDENTIFIER().getText()
+                            + "' no garantiza un return alcanzable en su tipo de retorno "
+                            + currentFunctionReturn,
+                    ctx);
+        }
+        Map<String, Symbol> funcScope = table.exitScopeAndCollect();
+        emitUnusedWarnings(funcScope);
         currentFunctionReturn = Type.VOID;
     }
 
     private void defineVariableFromParam(CPPSubsetParser.ParamContext ctx) {
         Type t = mapTypeName(ctx.typeName());
-        if (t == Type.VOID) {
-            throw new RuntimeException("parámetro void no permitido: " + ctx.IDENTIFIER().getText());
-        }
         String name = ctx.IDENTIFIER().getText();
-        table.define(Symbol.parameter(name, t, false, 0));
+        int line = ctx.IDENTIFIER().getSymbol().getLine();
+        int col = ctx.IDENTIFIER().getSymbol().getCharPositionInLine() + 1;
+        if (t == Type.VOID) {
+            diagnostics.addError("parámetro void no permitido: " + name, ctx);
+            t = Type.ERROR;
+        }
+        checkShadowing(name, ctx);
+        if (!table.define(Symbol.parameter(name, t, false, 0, line, col))) {
+            diagnostics.addError("parámetro duplicado en la misma función: " + name, ctx);
+        }
     }
 
     @Override
     public SemanticSynth visitVarDecl(CPPSubsetParser.VarDeclContext ctx) {
         Type t = mapTypeName(ctx.typeName());
-        if (t == Type.VOID) {
-            throw new RuntimeException("variable con tipo void: " + ctx.IDENTIFIER().getText());
-        }
         String name = ctx.IDENTIFIER().getText();
+        int line = ctx.IDENTIFIER().getSymbol().getLine();
+        int col = ctx.IDENTIFIER().getSymbol().getCharPositionInLine() + 1;
+        if (t == Type.VOID) {
+            diagnostics.addError("variable con tipo void: " + name, ctx);
+            t = Type.ERROR;
+        }
         boolean array = ctx.arrayDim() != null;
         int dim = 0;
         if (array) {
             dim = Integer.parseInt(ctx.arrayDim().INT_LITERAL().getText());
         }
-        table.define(Symbol.variable(name, t, array, dim));
+        checkShadowing(name, ctx);
+        if (!table.define(Symbol.variable(name, t, array, dim, line, col))) {
+            diagnostics.addError("símbolo duplicado en el mismo ámbito: " + name, ctx);
+        }
         return SemanticSynth.none();
     }
 
@@ -111,7 +155,8 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
         for (CPPSubsetParser.StatementContext st : ctx.statement()) {
             visitStatement(st);
         }
-        table.exitScope();
+        Map<String, Symbol> scope = table.exitScopeAndCollect();
+        emitUnusedWarnings(scope);
         return SemanticSynth.none();
     }
 
@@ -140,9 +185,14 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
         LvalueSynth lhs = analyzeLvalue(ctx.lvalue());
         SemanticSynth rhs = visit(ctx.expr());
         if (!rhs.isExpr()) {
-            throw new RuntimeException("lado derecho sin valor de expresión");
+            diagnostics.addError("lado derecho sin valor de expresión", ctx);
+            return SemanticSynth.none();
         }
-        checkAssignable(lhs.type(), rhs.exprType());
+        if (!isAssignable(lhs.type(), rhs.exprType())) {
+            diagnostics.addError(
+                    "tipos incompatibles en asignación: " + rhs.exprType() + " no asignable a " + lhs.type(),
+                    ctx);
+        }
         return SemanticSynth.none();
     }
 
@@ -150,11 +200,11 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
     public SemanticSynth visitIfStmt(CPPSubsetParser.IfStmtContext ctx) {
         SemanticSynth cond = visit(ctx.expr());
         if (!cond.isExpr()) {
-            throw new RuntimeException("condición de if inválida");
-        }
-        if (!isConditionType(cond.exprType())) {
-            throw new RuntimeException(
-                    "tipo incompatible en condición de if: " + cond.exprType() + " (se esperaba BOOL o numérico)");
+            diagnostics.addError("condición de if inválida", ctx);
+        } else if (!isConditionType(cond.exprType())) {
+            diagnostics.addError(
+                    "tipo incompatible en condición de if: " + cond.exprType() + " (se esperaba BOOL o numérico)",
+                    ctx);
         }
         visitBlock(ctx.block());
         return SemanticSynth.none();
@@ -164,15 +214,16 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
     public SemanticSynth visitReturnStmt(CPPSubsetParser.ReturnStmtContext ctx) {
         if (ctx.expr() == null) {
             if (currentFunctionReturn != Type.VOID) {
-                throw new RuntimeException("return sin expresión en función no void");
+                diagnostics.addError("return sin expresión en función no void", ctx);
             }
             return SemanticSynth.none();
         }
         SemanticSynth v = visit(ctx.expr());
         if (!v.isExpr()) {
-            throw new RuntimeException("return con expresión inválida");
+            diagnostics.addError("return con expresión inválida", ctx);
+            return SemanticSynth.none();
         }
-        checkReturnCompatible(currentFunctionReturn, v.exprType());
+        checkReturnCompatible(currentFunctionReturn, v.exprType(), ctx);
         return SemanticSynth.none();
     }
 
@@ -186,7 +237,7 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
         SemanticSynth acc = visit(ctx.andExpr(0));
         for (int i = 1; i < ctx.andExpr().size(); i++) {
             SemanticSynth r = visit(ctx.andExpr(i));
-            acc = combineLogical(acc, r, "||");
+            acc = combineLogical(acc, r, "||", ctx);
         }
         return acc;
     }
@@ -196,7 +247,7 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
         SemanticSynth acc = visit(ctx.eqExpr(0));
         for (int i = 1; i < ctx.eqExpr().size(); i++) {
             SemanticSynth r = visit(ctx.eqExpr(i));
-            acc = combineLogical(acc, r, "&&");
+            acc = combineLogical(acc, r, "&&", ctx);
         }
         return acc;
     }
@@ -207,7 +258,7 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
         for (int i = 1; i < ctx.relExpr().size(); i++) {
             String op = ((TerminalNode) ctx.getChild(2 * i - 1)).getText();
             SemanticSynth r = visit(ctx.relExpr(i));
-            acc = combineEquality(acc, r, op);
+            acc = combineEquality(acc, r, op, ctx);
         }
         return acc;
     }
@@ -218,7 +269,7 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
         for (int i = 1; i < ctx.addExpr().size(); i++) {
             String op = ((TerminalNode) ctx.getChild(2 * i - 1)).getText();
             SemanticSynth r = visit(ctx.addExpr(i));
-            acc = combineRelational(acc, r, op);
+            acc = combineRelational(acc, r, op, ctx);
         }
         return acc;
     }
@@ -229,7 +280,7 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
         for (int i = 1; i < ctx.mulExpr().size(); i++) {
             String op = ((TerminalNode) ctx.getChild(2 * i - 1)).getText();
             SemanticSynth r = visit(ctx.mulExpr(i));
-            acc = combineArithmetic(acc, r, op);
+            acc = combineArithmetic(acc, r, op, ctx);
         }
         return acc;
     }
@@ -241,9 +292,9 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
             String op = ((TerminalNode) ctx.getChild(2 * i - 1)).getText();
             SemanticSynth r = visit(ctx.unary(i));
             if ("%".equals(op)) {
-                acc = combineMod(acc, r);
+                acc = combineMod(acc, r, ctx);
             } else {
-                acc = combineArithmetic(acc, r, op);
+                acc = combineArithmetic(acc, r, op, ctx);
             }
         }
         return acc;
@@ -253,18 +304,24 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
     public SemanticSynth visitUnary(CPPSubsetParser.UnaryContext ctx) {
         SemanticSynth inner = visit(ctx.postfix());
         if (ctx.NOT() != null) {
-            requireBool(inner, "!");
+            if (!requireBool(inner, "!", ctx)) {
+                return SemanticSynth.errorExpr();
+            }
             AstExpr ast = new AstUnaryOp("!", inner.exprAst(), Type.BOOL);
             return SemanticSynth.expr(Type.BOOL, ast);
         }
         if (ctx.MINUS() != null) {
-            requireNumeric(inner, "-");
+            if (!requireNumeric(inner, "-", ctx)) {
+                return SemanticSynth.errorExpr();
+            }
             Type t = inner.exprType();
             AstExpr ast = new AstUnaryOp("-", inner.exprAst(), t);
             return SemanticSynth.expr(t, ast);
         }
         if (ctx.PLUS() != null) {
-            requireNumeric(inner, "+");
+            if (!requireNumeric(inner, "+", ctx)) {
+                return SemanticSynth.errorExpr();
+            }
             Type t = inner.exprType();
             AstExpr ast = new AstUnaryOp("+", inner.exprAst(), t);
             return SemanticSynth.expr(t, ast);
@@ -284,12 +341,17 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
         }
         if (ctx.IDENTIFIER() != null) {
             String name = ctx.IDENTIFIER().getText();
-            Symbol sym = table.resolve(name).orElseThrow(() -> new RuntimeException("identificador no declarado: " + name));
+            Symbol sym = resolveAndMark(name);
+            if (sym == null) {
+                diagnostics.addError("identificador no declarado: " + name, ctx);
+                return SemanticSynth.errorExpr();
+            }
             if (sym.kind() == SymbolKind.FUNCTION) {
                 return SemanticSynth.expr(sym.type(), new AstCallableRef(name, sym.type()));
             }
             if (sym.array()) {
-                throw new RuntimeException("el arreglo '" + name + "' requiere subíndice en una expresión");
+                diagnostics.addError("el arreglo '" + name + "' requiere subíndice en una expresión", ctx);
+                return SemanticSynth.errorExpr();
             }
             AstExpr ref = new AstVarRef(name, sym.type(), false);
             return SemanticSynth.expr(sym.type(), ref);
@@ -308,7 +370,10 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
             return SemanticSynth.expr(Type.FLOAT, new AstFloatLiteral(v));
         }
         if (ctx.CHAR_LITERAL() != null) {
-            int ch = parseCharLiteral(ctx.CHAR_LITERAL().getText(), ctx.CHAR_LITERAL().getSymbol().getLine());
+            Integer ch = parseCharLiteral(ctx.CHAR_LITERAL().getText(), ctx);
+            if (ch == null) {
+                return SemanticSynth.errorExpr();
+            }
             return SemanticSynth.expr(Type.INT, new AstCharLiteral(ch));
         }
         if (ctx.KW_TRUE() != null) {
@@ -363,7 +428,15 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
             CPPSubsetParser.AtomContext atom, List<CPPSubsetParser.PostfixSuffixContext> suffixes) {
         if (atom.IDENTIFIER() != null) {
             String name = atom.IDENTIFIER().getText();
-            Symbol sym = table.resolve(name).orElseThrow(() -> new RuntimeException("identificador no declarado: " + name));
+            Symbol sym = resolveAndMark(name);
+            if (sym == null) {
+                diagnostics.addError("identificador no declarado: " + name, atom);
+                // Aún visitamos los sufijos (índices/argumentos) para reportar sus errores internos.
+                for (CPPSubsetParser.PostfixSuffixContext s : suffixes) {
+                    visitSuffixForErrors(s);
+                }
+                return SemanticSynth.errorExpr();
+            }
             if (sym.kind() == SymbolKind.FUNCTION) {
                 if (suffixes.isEmpty()) {
                     return SemanticSynth.expr(sym.type(), new AstCallableRef(name, sym.type()));
@@ -372,7 +445,8 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
             }
             if (sym.array()) {
                 if (suffixes.isEmpty()) {
-                    throw new RuntimeException("el arreglo '" + name + "' requiere subíndice");
+                    diagnostics.addError("el arreglo '" + name + "' requiere subíndice", atom);
+                    return SemanticSynth.errorExpr();
                 }
                 return buildArrayChain(name, sym, suffixes);
             }
@@ -384,72 +458,111 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
             if (suf.LBRACK() != null) {
                 SemanticSynth idx = visit(suf.expr());
                 if (!idx.isExpr()) {
-                    throw new RuntimeException("índice de arreglo inválido");
+                    diagnostics.addError("índice de arreglo inválido", suf);
+                    cur = AstError.placeholder();
+                    t = Type.ERROR;
+                    continue;
                 }
-                if (idx.exprType() != Type.INT) {
-                    throw new RuntimeException("índice de arreglo debe ser INT, se obtuvo " + idx.exprType());
+                if (idx.exprType() != Type.INT && idx.exprType() != Type.ERROR) {
+                    diagnostics.addError("índice de arreglo debe ser INT, se obtuvo " + idx.exprType(), suf);
                 }
                 if (cur instanceof AstArraySubscript) {
-                    throw new RuntimeException("demasiados subíndices (arreglo de una sola dimensión)");
+                    diagnostics.addError("demasiados subíndices (arreglo de una sola dimensión)", suf);
+                    continue;
                 }
                 Type elem;
                 if (cur instanceof AstVarRef vr) {
                     if (!vr.isArray()) {
-                        throw new RuntimeException("subíndice en expresión que no es arreglo");
+                        diagnostics.addError("subíndice en expresión que no es arreglo", suf);
+                        cur = AstError.placeholder();
+                        t = Type.ERROR;
+                        continue;
                     }
                     elem = vr.resultType();
+                } else if (t == Type.ERROR) {
+                    elem = Type.ERROR;
                 } else {
-                    throw new RuntimeException("subíndice inválido: el operando no es un arreglo");
+                    diagnostics.addError("subíndice inválido: el operando no es un arreglo", suf);
+                    cur = AstError.placeholder();
+                    t = Type.ERROR;
+                    continue;
                 }
                 cur = new AstArraySubscript(cur, idx.exprAst(), elem);
                 t = elem;
             } else if (suf.LPAREN() != null) {
                 if (cur instanceof AstCallableRef cr) {
-                    Symbol fun = table.resolve(cr.name()).orElseThrow();
+                    Symbol fun = table.resolve(cr.name()).orElse(null);
                     List<AstExpr> args = new ArrayList<>();
+                    List<Type> argTypes = new ArrayList<>();
                     if (suf.argList() != null) {
                         for (CPPSubsetParser.ExprContext ex : suf.argList().expr()) {
                             SemanticSynth a = visit(ex);
                             if (!a.isExpr()) {
-                                throw new RuntimeException("argumento inválido en llamada a " + cr.name());
+                                diagnostics.addError(
+                                        "argumento inválido en llamada a " + cr.name(), ex);
+                                args.add(AstError.placeholder());
+                                argTypes.add(Type.ERROR);
+                            } else {
+                                args.add(a.exprAst());
+                                argTypes.add(a.exprType());
                             }
-                            args.add(a.exprAst());
                         }
                     }
-                    checkCall(fun, args);
-                    cur = new AstCallExpr(cr.name(), args, fun.type());
-                    t = fun.type();
+                    if (fun != null) {
+                        checkCall(fun, argTypes, suf);
+                        cur = new AstCallExpr(cr.name(), args, fun.type());
+                        t = fun.type();
+                    } else {
+                        cur = AstError.placeholder();
+                        t = Type.ERROR;
+                    }
+                } else if (t == Type.ERROR) {
+                    // ya hubo un error previo: visitamos los args para acumular errores internos.
+                    visitSuffixForErrors(suf);
                 } else {
-                    throw new RuntimeException("llamada inválida: el operando no es invocable");
+                    diagnostics.addError("llamada inválida: el operando no es invocable", suf);
+                    visitSuffixForErrors(suf);
+                    cur = AstError.placeholder();
+                    t = Type.ERROR;
                 }
             }
         }
         if (cur instanceof AstCallableRef) {
-            throw new RuntimeException("la función debe invocarse con ()");
+            diagnostics.addError("la función debe invocarse con ()", atom);
+            return SemanticSynth.errorExpr();
+        }
+        if (cur == null) {
+            return SemanticSynth.errorExpr();
         }
         return SemanticSynth.expr(t, cur);
     }
 
     private SemanticSynth buildCallChain(
-            String name, Symbol fun, List<CPPSubsetParser.PostfixSuffixContext> suffixes) {
-        if (suffixes.isEmpty()) {
-            throw new RuntimeException("la función '" + name + "' debe invocarse con ()");
-        }
+            String name,
+            Symbol fun,
+            List<CPPSubsetParser.PostfixSuffixContext> suffixes) {
         CPPSubsetParser.PostfixSuffixContext first = suffixes.get(0);
         if (first.LBRACK() != null) {
-            throw new RuntimeException("una función no se indexa como arreglo");
+            diagnostics.addError("una función no se indexa como arreglo", first);
+            visitSuffixForErrors(first);
+            return SemanticSynth.errorExpr();
         }
         List<AstExpr> args = new ArrayList<>();
+        List<Type> argTypes = new ArrayList<>();
         if (first.argList() != null) {
             for (CPPSubsetParser.ExprContext ex : first.argList().expr()) {
                 SemanticSynth a = visit(ex);
                 if (!a.isExpr()) {
-                    throw new RuntimeException("argumento inválido en llamada a " + name);
+                    diagnostics.addError("argumento inválido en llamada a " + name, ex);
+                    args.add(AstError.placeholder());
+                    argTypes.add(Type.ERROR);
+                } else {
+                    args.add(a.exprAst());
+                    argTypes.add(a.exprType());
                 }
-                args.add(a.exprAst());
             }
         }
-        checkCall(fun, args);
+        checkCall(fun, argTypes, first);
         AstExpr call = new AstCallExpr(name, args, fun.type());
         SemanticSynth cur = SemanticSynth.expr(fun.type(), call);
         List<CPPSubsetParser.PostfixSuffixContext> rest = suffixes.subList(1, suffixes.size());
@@ -457,23 +570,26 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
     }
 
     private SemanticSynth buildArrayChain(
-            String name, Symbol arr, List<CPPSubsetParser.PostfixSuffixContext> suffixes) {
-        if (suffixes.isEmpty()) {
-            throw new RuntimeException("el arreglo '" + name + "' requiere subíndice");
-        }
+            String name,
+            Symbol arr,
+            List<CPPSubsetParser.PostfixSuffixContext> suffixes) {
         CPPSubsetParser.PostfixSuffixContext first = suffixes.get(0);
         if (first.LPAREN() != null) {
-            throw new RuntimeException("un arreglo no es invocable");
+            diagnostics.addError("un arreglo no es invocable", first);
+            visitSuffixForErrors(first);
+            return SemanticSynth.errorExpr();
         }
         if (first.LBRACK() == null) {
-            throw new RuntimeException("se esperaba '[' para el arreglo '" + name + "'");
+            diagnostics.addError("se esperaba '[' para el arreglo '" + name + "'", first);
+            return SemanticSynth.errorExpr();
         }
         SemanticSynth idx = visit(first.expr());
         if (!idx.isExpr()) {
-            throw new RuntimeException("índice de arreglo inválido");
+            diagnostics.addError("índice de arreglo inválido", first);
+            return SemanticSynth.errorExpr();
         }
-        if (idx.exprType() != Type.INT) {
-            throw new RuntimeException("índice de arreglo debe ser INT, se obtuvo " + idx.exprType());
+        if (idx.exprType() != Type.INT && idx.exprType() != Type.ERROR) {
+            diagnostics.addError("índice de arreglo debe ser INT, se obtuvo " + idx.exprType(), first);
         }
         AstExpr baseRef = new AstVarRef(name, arr.type(), true);
         AstExpr sub = new AstArraySubscript(baseRef, idx.exprAst(), arr.type());
@@ -488,63 +604,93 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
         Type t = cur.exprType();
         for (CPPSubsetParser.PostfixSuffixContext suf : rest) {
             if (suf.LBRACK() != null) {
-                throw new RuntimeException("demasiados subíndices (arreglo de una sola dimensión)");
+                diagnostics.addError("demasiados subíndices (arreglo de una sola dimensión)", suf);
+                visitSuffixForErrors(suf);
             }
             if (suf.LPAREN() != null) {
-                throw new RuntimeException("no se puede llamar al resultado de una expresión no función");
+                diagnostics.addError("no se puede llamar al resultado de una expresión no función", suf);
+                visitSuffixForErrors(suf);
             }
         }
         return SemanticSynth.expr(t, e);
     }
 
-    private void checkCall(Symbol fun, List<AstExpr> args) {
+    /** Visita los hijos de un sufijo (expr de índice, argumentos) sólo para acumular sus errores. */
+    private void visitSuffixForErrors(CPPSubsetParser.PostfixSuffixContext suf) {
+        if (suf.expr() != null) {
+            visit(suf.expr());
+        }
+        if (suf.argList() != null) {
+            for (CPPSubsetParser.ExprContext ex : suf.argList().expr()) {
+                visit(ex);
+            }
+        }
+    }
+
+    private void checkCall(Symbol fun, List<Type> argTypes, ParserRuleContext ctx) {
         List<Type> formals = fun.parameterTypes();
-        if (args.size() != formals.size()) {
-            throw new RuntimeException(
+        if (argTypes.size() != formals.size()) {
+            diagnostics.addError(
                     String.format(
                             Locale.ROOT,
                             "aridad incorrecta en llamada a '%s': se esperaban %d argumentos y hay %d",
                             fun.name(),
                             formals.size(),
-                            args.size()));
+                            argTypes.size()),
+                    ctx);
+            return;
         }
-        for (int i = 0; i < args.size(); i++) {
-            Type got = args.get(i).resultType();
+        for (int i = 0; i < argTypes.size(); i++) {
+            Type got = argTypes.get(i);
             Type want = formals.get(i);
             if (!isAssignable(want, got)) {
-                throw new RuntimeException(
+                diagnostics.addError(
                         String.format(
                                 Locale.ROOT,
                                 "tipo incompatible en argumento %d de '%s': se esperaba %s y se obtuvo %s",
                                 i + 1,
                                 fun.name(),
                                 want,
-                                got));
+                                got),
+                        ctx);
             }
         }
     }
 
     private LvalueSynth analyzeLvalue(CPPSubsetParser.LvalueContext ctx) {
         String name = ctx.IDENTIFIER().getText();
-        Symbol sym = table.resolve(name).orElseThrow(() -> new RuntimeException("identificador no declarado: " + name));
+        Symbol sym = resolveAndMark(name);
+        if (sym == null) {
+            diagnostics.addError("identificador no declarado: " + name, ctx);
+            if (ctx.expr() != null) {
+                visit(ctx.expr());
+            }
+            return new LvalueSynth(Type.ERROR, ctx.LBRACK() != null);
+        }
         if (sym.kind() == SymbolKind.FUNCTION) {
-            throw new RuntimeException("no se puede asignar a una función: " + name);
+            diagnostics.addError("no se puede asignar a una función: " + name, ctx);
+            if (ctx.expr() != null) {
+                visit(ctx.expr());
+            }
+            return new LvalueSynth(Type.ERROR, ctx.LBRACK() != null);
         }
         if (ctx.LBRACK() == null) {
             if (sym.array()) {
-                throw new RuntimeException("falta subíndice en arreglo: " + name);
+                diagnostics.addError("falta subíndice en arreglo: " + name, ctx);
+                return new LvalueSynth(Type.ERROR, false);
             }
             return new LvalueSynth(sym.type(), false);
         }
         if (!sym.array()) {
-            throw new RuntimeException("subíndice en variable no arreglo: " + name);
+            diagnostics.addError("subíndice en variable no arreglo: " + name, ctx);
+            visit(ctx.expr());
+            return new LvalueSynth(Type.ERROR, true);
         }
         SemanticSynth idx = visit(ctx.expr());
         if (!idx.isExpr()) {
-            throw new RuntimeException("índice inválido en asignación");
-        }
-        if (idx.exprType() != Type.INT) {
-            throw new RuntimeException("índice de arreglo debe ser INT");
+            diagnostics.addError("índice inválido en asignación", ctx);
+        } else if (idx.exprType() != Type.INT && idx.exprType() != Type.ERROR) {
+            diagnostics.addError("índice de arreglo debe ser INT", ctx);
         }
         return new LvalueSynth(sym.type(), true);
     }
@@ -567,127 +713,176 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
         if (ctx.KW_VOID() != null) {
             return Type.VOID;
         }
-        throw new RuntimeException("tipo no soportado: " + ctx.getText());
+        return Type.ERROR;
     }
 
-    private static int parseCharLiteral(String text, int line) {
+    private Integer parseCharLiteral(String text, ParserRuleContext ctx) {
         if (text.length() < 2 || text.charAt(0) != '\'' || text.charAt(text.length() - 1) != '\'') {
-            throw new RuntimeException("literal de carácter mal formado en línea " + line);
+            diagnostics.addError("literal de carácter mal formado", ctx);
+            return null;
         }
         String inner = text.substring(1, text.length() - 1);
         if (inner.isEmpty()) {
-            throw new RuntimeException("carácter vacío en línea " + line);
+            diagnostics.addError("carácter vacío", ctx);
+            return null;
         }
         if (inner.charAt(0) == '\\') {
             if (inner.length() < 2) {
-                throw new RuntimeException("escape incompleto en línea " + line);
+                diagnostics.addError("escape incompleto", ctx);
+                return null;
             }
             return switch (inner.charAt(1)) {
-                case 'n' -> '\n';
-                case 't' -> '\t';
-                case 'r' -> '\r';
-                case '\\' -> '\\';
-                case '\'' -> '\'';
-                case '0' -> '\0';
-                default -> inner.charAt(1);
+                case 'n' -> (int) '\n';
+                case 't' -> (int) '\t';
+                case 'r' -> (int) '\r';
+                case '\\' -> (int) '\\';
+                case '\'' -> (int) '\'';
+                case '0' -> 0;
+                default -> (int) inner.charAt(1);
             };
         }
-        return inner.charAt(0);
+        return (int) inner.charAt(0);
     }
 
-    private SemanticSynth combineArithmetic(SemanticSynth a, SemanticSynth b, String op) {
+    // ---- combinadores binarios ----
+
+    private SemanticSynth combineArithmetic(SemanticSynth a, SemanticSynth b, String op, ParserRuleContext ctx) {
         if (!a.isExpr() || !b.isExpr()) {
-            throw new RuntimeException("operandos inválidos en operación " + op);
+            diagnostics.addError("operandos inválidos en operación " + op, ctx);
+            return SemanticSynth.errorExpr();
         }
         Type ta = a.exprType();
         Type tb = b.exprType();
+        if (ta == Type.ERROR || tb == Type.ERROR) {
+            return SemanticSynth.errorExpr();
+        }
         if (!ta.isNumeric() || !tb.isNumeric()) {
-            throw new RuntimeException("tipos incompatibles en " + op + ": " + ta + " y " + tb);
+            diagnostics.addError("tipos incompatibles en " + op + ": " + ta + " y " + tb, ctx);
+            return SemanticSynth.errorExpr();
         }
         Type out = (ta == Type.FLOAT || tb == Type.FLOAT) ? Type.FLOAT : Type.INT;
         AstExpr ast = new AstBinOp(a.exprAst(), op, b.exprAst(), out);
         return SemanticSynth.expr(out, ast);
     }
 
-    private SemanticSynth combineMod(SemanticSynth a, SemanticSynth b) {
+    private SemanticSynth combineMod(SemanticSynth a, SemanticSynth b, ParserRuleContext ctx) {
         if (!a.isExpr() || !b.isExpr()) {
-            throw new RuntimeException("operandos inválidos en %");
+            diagnostics.addError("operandos inválidos en %", ctx);
+            return SemanticSynth.errorExpr();
         }
-        if (a.exprType() != Type.INT || b.exprType() != Type.INT) {
-            throw new RuntimeException("tipos incompatibles en %: se requieren INT e INT");
+        Type ta = a.exprType();
+        Type tb = b.exprType();
+        if (ta == Type.ERROR || tb == Type.ERROR) {
+            return SemanticSynth.errorExpr();
+        }
+        if (ta != Type.INT || tb != Type.INT) {
+            diagnostics.addError("tipos incompatibles en %: se requieren INT e INT", ctx);
+            return SemanticSynth.errorExpr();
         }
         AstExpr ast = new AstBinOp(a.exprAst(), "%", b.exprAst(), Type.INT);
         return SemanticSynth.expr(Type.INT, ast);
     }
 
-    private SemanticSynth combineRelational(SemanticSynth a, SemanticSynth b, String op) {
+    private SemanticSynth combineRelational(SemanticSynth a, SemanticSynth b, String op, ParserRuleContext ctx) {
         if (!a.isExpr() || !b.isExpr()) {
-            throw new RuntimeException("operandos inválidos en " + op);
+            diagnostics.addError("operandos inválidos en " + op, ctx);
+            return SemanticSynth.errorExpr();
         }
         Type ta = a.exprType();
         Type tb = b.exprType();
+        if (ta == Type.ERROR || tb == Type.ERROR) {
+            return SemanticSynth.expr(Type.BOOL, new AstBinOp(a.exprAst(), op, b.exprAst(), Type.BOOL));
+        }
         if (!ta.isNumeric() || !tb.isNumeric()) {
-            throw new RuntimeException("tipos incompatibles en " + op + ": " + ta + " y " + tb);
+            diagnostics.addError("tipos incompatibles en " + op + ": " + ta + " y " + tb, ctx);
+            return SemanticSynth.errorExpr();
         }
         AstExpr ast = new AstBinOp(a.exprAst(), op, b.exprAst(), Type.BOOL);
         return SemanticSynth.expr(Type.BOOL, ast);
     }
 
-    private SemanticSynth combineEquality(SemanticSynth a, SemanticSynth b, String op) {
+    private SemanticSynth combineEquality(SemanticSynth a, SemanticSynth b, String op, ParserRuleContext ctx) {
         if (!a.isExpr() || !b.isExpr()) {
-            throw new RuntimeException("operandos inválidos en " + op);
+            diagnostics.addError("operandos inválidos en " + op, ctx);
+            return SemanticSynth.errorExpr();
         }
         Type ta = a.exprType();
         Type tb = b.exprType();
+        if (ta == Type.ERROR || tb == Type.ERROR) {
+            return SemanticSynth.expr(Type.BOOL, new AstBinOp(a.exprAst(), op, b.exprAst(), Type.BOOL));
+        }
+        boolean ok;
         if (ta == Type.BOOL || tb == Type.BOOL) {
-            if (ta != tb) {
-                throw new RuntimeException("tipos incompatibles en " + op + ": " + ta + " y " + tb);
-            }
+            ok = ta == tb;
         } else if (ta.isNumeric() && tb.isNumeric()) {
-            // ok
-        } else if (ta == Type.STRING && tb == Type.STRING) {
-            // reservado por si se amplía el lexer/gramática
+            ok = true;
         } else {
-            throw new RuntimeException("tipos incompatibles en " + op + ": " + ta + " y " + tb);
+            ok = ta == tb; // STRING == STRING reservado por extensión futura
+        }
+        if (!ok) {
+            diagnostics.addError("tipos incompatibles en " + op + ": " + ta + " y " + tb, ctx);
+            return SemanticSynth.errorExpr();
         }
         AstExpr ast = new AstBinOp(a.exprAst(), op, b.exprAst(), Type.BOOL);
         return SemanticSynth.expr(Type.BOOL, ast);
     }
 
-    private SemanticSynth combineLogical(SemanticSynth a, SemanticSynth b, String op) {
+    private SemanticSynth combineLogical(SemanticSynth a, SemanticSynth b, String op, ParserRuleContext ctx) {
         if (!a.isExpr() || !b.isExpr()) {
-            throw new RuntimeException("operandos inválidos en " + op);
+            diagnostics.addError("operandos inválidos en " + op, ctx);
+            return SemanticSynth.errorExpr();
         }
-        if (a.exprType() != Type.BOOL || b.exprType() != Type.BOOL) {
-            throw new RuntimeException("tipos incompatibles en " + op + ": se esperaba BOOL y BOOL");
+        Type ta = a.exprType();
+        Type tb = b.exprType();
+        if (ta == Type.ERROR || tb == Type.ERROR) {
+            return SemanticSynth.expr(Type.BOOL, new AstBinOp(a.exprAst(), op, b.exprAst(), Type.BOOL));
+        }
+        if (ta != Type.BOOL || tb != Type.BOOL) {
+            diagnostics.addError("tipos incompatibles en " + op + ": se esperaba BOOL y BOOL", ctx);
+            return SemanticSynth.errorExpr();
         }
         AstExpr ast = new AstBinOp(a.exprAst(), op, b.exprAst(), Type.BOOL);
         return SemanticSynth.expr(Type.BOOL, ast);
     }
 
-    private static void requireNumeric(SemanticSynth s, String op) {
-        if (!s.isExpr() || !s.exprType().isNumeric()) {
-            throw new RuntimeException("tipo incompatible en operador " + op + ": se esperaba numérico");
+    private boolean requireNumeric(SemanticSynth s, String op, ParserRuleContext ctx) {
+        if (!s.isExpr()) {
+            diagnostics.addError("operando inválido en operador " + op, ctx);
+            return false;
         }
+        if (s.exprType() == Type.ERROR) {
+            return true;
+        }
+        if (!s.exprType().isNumeric()) {
+            diagnostics.addError("tipo incompatible en operador " + op + ": se esperaba numérico", ctx);
+            return false;
+        }
+        return true;
     }
 
-    private static void requireBool(SemanticSynth s, String op) {
-        if (!s.isExpr() || s.exprType() != Type.BOOL) {
-            throw new RuntimeException("tipo incompatible en operador " + op + ": se esperaba BOOL");
+    private boolean requireBool(SemanticSynth s, String op, ParserRuleContext ctx) {
+        if (!s.isExpr()) {
+            diagnostics.addError("operando inválido en operador " + op, ctx);
+            return false;
         }
+        if (s.exprType() == Type.ERROR) {
+            return true;
+        }
+        if (s.exprType() != Type.BOOL) {
+            diagnostics.addError("tipo incompatible en operador " + op + ": se esperaba BOOL", ctx);
+            return false;
+        }
+        return true;
     }
 
     private static boolean isConditionType(Type t) {
-        return t == Type.BOOL || t == Type.INT || t == Type.FLOAT;
-    }
-
-    private static void checkAssignable(Type lhs, Type rhs) {
-        if (!isAssignable(lhs, rhs)) {
-            throw new RuntimeException("tipos incompatibles en asignación: " + rhs + " no asignable a " + lhs);
-        }
+        return t == Type.BOOL || t == Type.INT || t == Type.FLOAT || t == Type.ERROR;
     }
 
     private static boolean isAssignable(Type lhs, Type rhs) {
+        if (lhs == Type.ERROR || rhs == Type.ERROR) {
+            return true;
+        }
         if (lhs == rhs) {
             return true;
         }
@@ -697,12 +892,71 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
         return false;
     }
 
-    private static void checkReturnCompatible(Type declared, Type actual) {
+    private void checkReturnCompatible(Type declared, Type actual, ParserRuleContext ctx) {
+        if (declared == Type.ERROR || actual == Type.ERROR) {
+            return;
+        }
         if (declared == Type.VOID) {
-            throw new RuntimeException("return con valor en función void");
+            diagnostics.addError("return con valor en función void", ctx);
+            return;
         }
         if (!isAssignable(declared, actual)) {
-            throw new RuntimeException("tipo incompatible en return: se esperaba " + declared + " y se obtuvo " + actual);
+            diagnostics.addError(
+                    "tipo incompatible en return: se esperaba " + declared + " y se obtuvo " + actual, ctx);
         }
+    }
+
+    // ---- warnings: no usados, shadowing, return alcanzable ----
+
+    private Symbol resolveAndMark(String name) {
+        Symbol sym = table.resolve(name).orElse(null);
+        if (sym != null) {
+            sym.markUsed();
+        }
+        return sym;
+    }
+
+    private void checkShadowing(String name, ParserRuleContext ctx) {
+        if (table.resolveOuter(name).isPresent()) {
+            diagnostics.addWarning("la variable '" + name + "' oculta una declaración externa", ctx);
+        }
+    }
+
+    private void emitUnusedWarnings(Map<String, Symbol> scope) {
+        for (Symbol s : scope.values()) {
+            if (s.used()) {
+                continue;
+            }
+            switch (s.kind()) {
+                case VARIABLE -> diagnostics.addWarning(
+                        "variable declarada y nunca usada: " + s.name(), s.line(), s.column());
+                case PARAMETER -> diagnostics.addWarning(
+                        "parámetro declarado y nunca usado: " + s.name(), s.line(), s.column());
+                case FUNCTION -> { /* las funciones del scope global no se reportan */ }
+            }
+        }
+    }
+
+    /**
+     * Chequeo simple: el bloque garantiza retorno si su último statement es un return.
+     * (La gramática actual no tiene 'else', por lo que un if-then sin else nunca garantiza retorno.)
+     */
+    private static boolean blockGuaranteesReturn(CPPSubsetParser.BlockContext block) {
+        List<CPPSubsetParser.StatementContext> stmts = block.statement();
+        if (stmts.isEmpty()) {
+            return false;
+        }
+        return statementGuaranteesReturn(stmts.get(stmts.size() - 1));
+    }
+
+    private static boolean statementGuaranteesReturn(CPPSubsetParser.StatementContext st) {
+        if (st.returnStmt() != null) {
+            return true;
+        }
+        if (st.block() != null) {
+            return blockGuaranteesReturn(st.block());
+        }
+        // ifStmt sin else nunca garantiza retorno por sí mismo
+        return false;
     }
 }
