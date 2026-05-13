@@ -40,8 +40,10 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.3.0</version>
+                <!-- Por defecto: pipeline completo (parser + tabla + semántica + TAC).
+                     Solo lexer: mvn exec:java "-Dexec.mainClass=com.cppcompiler.lexer.RunCppLexer" "-Dexec.args=archivo.cpp" -->
                 <configuration>
-                    <mainClass>com.cppcompiler.lexer.RunCppLexer</mainClass>
+                    <mainClass>com.cppcompiler.RunCompiler</mainClass>
                 </configuration>
             </plugin>
         </plugins>
