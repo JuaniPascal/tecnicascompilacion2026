@@ -8,6 +8,8 @@ import java.util.List;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 
+import com.cppcompiler.util.AnsiColors;
+
 /**
  * Acumula errores y warnings semánticos para no abortar el análisis ante el primer fallo.
  */
@@ -72,13 +74,13 @@ public final class DiagnosticCollector {
         return Collections.unmodifiableList(warnings);
     }
 
-    /** Imprime warnings y luego errores, en orden de aparición. */
+    /** Imprime warnings y luego errores, en orden de aparición, con colores. */
     public void printAll(PrintStream out) {
         for (Diagnostic w : warnings) {
-            out.println(w);
+            out.println(AnsiColors.yellow(w.toString()));
         }
         for (Diagnostic e : errors) {
-            out.println(e);
+            out.println(AnsiColors.red(e.toString()));
         }
     }
 

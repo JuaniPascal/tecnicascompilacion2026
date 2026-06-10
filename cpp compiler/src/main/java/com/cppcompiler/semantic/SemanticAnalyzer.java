@@ -36,6 +36,8 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
     private final ScopedSymbolTable table = new ScopedSymbolTable();
     private final DiagnosticCollector diagnostics = new DiagnosticCollector();
     private Type currentFunctionReturn = Type.VOID;
+    /** Profundidad de bucles activos. break/continue solo son válidos si > 0. */
+    private int loopDepth = 0;
 
     public ScopedSymbolTable symbolTable() {
         return table;
@@ -171,6 +173,18 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
         if (ctx.ifStmt() != null) {
             return visitIfStmt(ctx.ifStmt());
         }
+        if (ctx.whileStmt() != null) {
+            return visitWhileStmt(ctx.whileStmt());
+        }
+        if (ctx.forStmt() != null) {
+            return visitForStmt(ctx.forStmt());
+        }
+        if (ctx.breakStmt() != null) {
+            return visitBreakStmt(ctx.breakStmt());
+        }
+        if (ctx.continueStmt() != null) {
+            return visitContinueStmt(ctx.continueStmt());
+        }
         if (ctx.returnStmt() != null) {
             return visitReturnStmt(ctx.returnStmt());
         }
@@ -206,8 +220,128 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
                     "tipo incompatible en condición de if: " + cond.exprType() + " (se esperaba BOOL o numérico)",
                     ctx);
         }
-        visitBlock(ctx.block());
+        // Bloque "then"
+        visitBlock(ctx.block(0));
+        // Bloque "else" (opcional)
+        if (ctx.block().size() > 1) {
+            visitBlock(ctx.block(1));
+        }
         return SemanticSynth.none();
+    }
+
+    @Override
+    public SemanticSynth visitWhileStmt(CPPSubsetParser.WhileStmtContext ctx) {
+        SemanticSynth cond = visit(ctx.expr());
+        if (!cond.isExpr()) {
+            diagnostics.addError("condición de while inválida", ctx);
+        } else if (!isConditionType(cond.exprType())) {
+            diagnostics.addError(
+                    "tipo incompatible en condición de while: " + cond.exprType() + " (se esperaba BOOL o numérico)",
+                    ctx);
+        }
+        loopDepth++;
+        visitBlock(ctx.block());
+        loopDepth--;
+        return SemanticSynth.none();
+    }
+
+    @Override
+    public SemanticSynth visitForStmt(CPPSubsetParser.ForStmtContext ctx) {
+        // El init de un "for" puede declarar una variable nueva visible solo dentro del bucle.
+        // Abrimos un scope dedicado para el for completo (init + cond + update + body).
+        table.enterScope();
+        if (ctx.forInit() != null) {
+            analyzeForInit(ctx.forInit());
+        }
+        if (ctx.expr() != null) {
+            SemanticSynth cond = visit(ctx.expr());
+            if (!cond.isExpr()) {
+                diagnostics.addError("condición de for inválida", ctx.expr());
+            } else if (!isConditionType(cond.exprType())) {
+                diagnostics.addError(
+                        "tipo incompatible en condición de for: " + cond.exprType()
+                                + " (se esperaba BOOL o numérico)",
+                        ctx.expr());
+            }
+        }
+        if (ctx.forUpdate() != null) {
+            analyzeForUpdate(ctx.forUpdate());
+        }
+        loopDepth++;
+        // El cuerpo abre su propio scope; conservamos el scope del init/update al exterior.
+        visitBlock(ctx.block());
+        loopDepth--;
+        Map<String, Symbol> forScope = table.exitScopeAndCollect();
+        emitUnusedWarnings(forScope);
+        return SemanticSynth.none();
+    }
+
+    @Override
+    public SemanticSynth visitBreakStmt(CPPSubsetParser.BreakStmtContext ctx) {
+        if (loopDepth == 0) {
+            diagnostics.addError("'break' fuera de un bucle", ctx);
+        }
+        return SemanticSynth.none();
+    }
+
+    @Override
+    public SemanticSynth visitContinueStmt(CPPSubsetParser.ContinueStmtContext ctx) {
+        if (loopDepth == 0) {
+            diagnostics.addError("'continue' fuera de un bucle", ctx);
+        }
+        return SemanticSynth.none();
+    }
+
+    private void analyzeForInit(CPPSubsetParser.ForInitContext ctx) {
+        if (ctx instanceof CPPSubsetParser.ForInitDeclContext fid) {
+            Type t = mapTypeName(fid.typeName());
+            String name = fid.IDENTIFIER().getText();
+            int line = fid.IDENTIFIER().getSymbol().getLine();
+            int col = fid.IDENTIFIER().getSymbol().getCharPositionInLine() + 1;
+            if (t == Type.VOID) {
+                diagnostics.addError("variable con tipo void en for-init: " + name, fid);
+                t = Type.ERROR;
+            }
+            checkShadowing(name, fid);
+            if (!table.define(Symbol.variable(name, t, false, 0, line, col))) {
+                diagnostics.addError("símbolo duplicado en el mismo ámbito: " + name, fid);
+            }
+            SemanticSynth rhs = visit(fid.expr());
+            if (!rhs.isExpr()) {
+                diagnostics.addError("expresión de inicialización inválida en for", fid);
+            } else if (!isAssignable(t, rhs.exprType())) {
+                diagnostics.addError(
+                        "tipos incompatibles en for-init: " + rhs.exprType() + " no asignable a " + t,
+                        fid);
+            }
+        } else if (ctx instanceof CPPSubsetParser.ForInitAssignContext fia) {
+            // Se reusa la lógica de asignación.
+            LvalueSynth lhs = analyzeLvalue(fia.lvalue());
+            SemanticSynth rhs = visit(fia.expr());
+            if (!rhs.isExpr()) {
+                diagnostics.addError("lado derecho sin valor en for-init", fia);
+                return;
+            }
+            if (!isAssignable(lhs.type(), rhs.exprType())) {
+                diagnostics.addError(
+                        "tipos incompatibles en for-init: " + rhs.exprType() + " no asignable a " + lhs.type(),
+                        fia);
+            }
+        }
+    }
+
+    private void analyzeForUpdate(CPPSubsetParser.ForUpdateContext ctx) {
+        LvalueSynth lhs = analyzeLvalue(ctx.lvalue());
+        SemanticSynth rhs = visit(ctx.expr());
+        if (!rhs.isExpr()) {
+            diagnostics.addError("lado derecho sin valor en for-update", ctx);
+            return;
+        }
+        if (!isAssignable(lhs.type(), rhs.exprType())) {
+            diagnostics.addError(
+                    "tipos incompatibles en for-update: " + rhs.exprType() + " no asignable a " + lhs.type(),
+                    ctx);
+        }
     }
 
     @Override
@@ -938,15 +1072,16 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
     }
 
     /**
-     * Chequeo simple: el bloque garantiza retorno si su último statement es un return.
-     * (La gramática actual no tiene 'else', por lo que un if-then sin else nunca garantiza retorno.)
+     * Chequeo simple: el bloque garantiza retorno si alguno de sus statements
+     * (no solo el último) lo garantiza.
      */
     private static boolean blockGuaranteesReturn(CPPSubsetParser.BlockContext block) {
-        List<CPPSubsetParser.StatementContext> stmts = block.statement();
-        if (stmts.isEmpty()) {
-            return false;
+        for (CPPSubsetParser.StatementContext st : block.statement()) {
+            if (statementGuaranteesReturn(st)) {
+                return true;
+            }
         }
-        return statementGuaranteesReturn(stmts.get(stmts.size() - 1));
+        return false;
     }
 
     private static boolean statementGuaranteesReturn(CPPSubsetParser.StatementContext st) {
@@ -956,7 +1091,14 @@ public final class SemanticAnalyzer extends CPPSubsetParserBaseVisitor<SemanticS
         if (st.block() != null) {
             return blockGuaranteesReturn(st.block());
         }
-        // ifStmt sin else nunca garantiza retorno por sí mismo
+        if (st.ifStmt() != null) {
+            // Solo si tiene "else" Y ambos bloques garantizan retorno.
+            CPPSubsetParser.IfStmtContext is = st.ifStmt();
+            if (is.block().size() < 2) {
+                return false;
+            }
+            return blockGuaranteesReturn(is.block(0)) && blockGuaranteesReturn(is.block(1));
+        }
         return false;
     }
 }

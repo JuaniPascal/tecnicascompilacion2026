@@ -30,6 +30,7 @@ import com.cppcompiler.tac.SimpleTacOptimizer;
 import com.cppcompiler.tac.SimpleTacOptimizer.Result;
 import com.cppcompiler.tac.TacGenerator;
 import com.cppcompiler.tac.TacProgram;
+import com.cppcompiler.util.AnsiColors;
 
 /**
  * Pipeline completo: parser + visualización del árbol + tabla de símbolos +
@@ -43,6 +44,8 @@ public final class RunCompiler {
 
     private static final String SEMANTIC_OUTPUT = "salida_compilador_semantico.txt";
     private static final String TREE_OUTPUT = "arbol_sintactico.txt";
+    private static final String INTERMEDIATE_OUTPUT = "ejemplo_codigo_intermedio.txt";
+    private static final String OPTIMIZED_OUTPUT = "ejemplo_codigo_optimizado.txt";
 
     private RunCompiler() {}
 
@@ -128,7 +131,15 @@ public final class RunCompiler {
         int errs = sem.diagnostics().errorCount();
         int warns = sem.diagnostics().warningCount();
         System.out.println();
-        System.out.printf(Locale.ROOT, "Resumen semantico: %d errores, %d warnings.%n", errs, warns);
+        String resumen = String.format(
+                Locale.ROOT, "Resumen semantico: %d errores, %d warnings.", errs, warns);
+        if (errs > 0) {
+            System.out.println(AnsiColors.red(resumen));
+        } else if (warns > 0) {
+            System.out.println(AnsiColors.yellow(resumen));
+        } else {
+            System.out.println(AnsiColors.green(resumen));
+        }
         System.out.flush();
 
         if (sem.diagnostics().hasErrors()) {
@@ -137,7 +148,8 @@ public final class RunCompiler {
             // matar la JVM (y con ella la ventana). El proceso queda vivo gracias al
             // EDT de Swing y termina cuando el usuario cierra la ventana.
             if (guiShown) {
-                System.out.println("Compilacion detenida por errores semanticos. Cerrá la ventana del árbol para terminar.");
+                System.out.println(AnsiColors.red(
+                        "Compilacion detenida por errores semanticos. Cerrá la ventana del árbol para terminar."));
                 System.out.flush();
                 return;
             }
@@ -150,28 +162,63 @@ public final class RunCompiler {
         Path semOutCwd = Paths.get(System.getProperty("user.dir")).resolve(SEMANTIC_OUTPUT);
         Files.deleteIfExists(semOut);
         Files.deleteIfExists(semOutCwd);
-        System.out.println("Análisis semántico: OK (tipos y ámbitos).");
+        System.out.println(AnsiColors.green("Análisis semántico: OK (tipos y ámbitos)."));
         System.out.println();
         System.out.flush();
 
+        System.out.println(AnsiColors.green(">>> Fase: generación de código intermedio (TAC)"));
         TacGenerator gen = new TacGenerator();
         TacProgram tac = gen.generate(tree);
         List<String> raw = tac.getLines();
-        System.out.println(
-                TacProgram.formatNumbered(
-                        raw,
-                        "Código de tres direcciones generado",
-                        "Archivo: ejemplo_codigo_intermedio.txt"));
+        String intermediateText = TacProgram.formatNumbered(
+                raw,
+                "Código de tres direcciones generado",
+                "Archivo: " + INTERMEDIATE_OUTPUT);
+        System.out.println(intermediateText);
+        Path interOut = intermediatePath(path);
+        writeTextFile(interOut, intermediateText);
+        System.out.println(AnsiColors.green("TAC intermedio escrito en: " + interOut.toAbsolutePath()));
+        System.out.println();
 
+        System.out.println(AnsiColors.green(">>> Fase: optimización del código intermedio"));
         Result opt = SimpleTacOptimizer.optimize(raw);
-        System.out.print(
-                SimpleTacOptimizer.formatOptimizedHeader(
-                        raw.size(), opt.lines().size(), opt.foldedExpressions()));
-        System.out.println(
-                TacProgram.formatNumbered(
-                        opt.lines(),
-                        "Código de tres direcciones generado",
-                        "Archivo: ejemplo_codigo_optimizado.txt"));
+        String optHeader = SimpleTacOptimizer.formatOptimizedHeader(
+                raw.size(), opt.lines().size(), opt);
+        String optBody = TacProgram.formatNumbered(
+                opt.lines(),
+                "Código de tres direcciones OPTIMIZADO",
+                "Archivo: " + OPTIMIZED_OUTPUT);
+        System.out.print(optHeader);
+        System.out.println(optBody);
+        Path optOut = optimizedPath(path);
+        writeTextFile(optOut, optHeader + optBody);
+        System.out.println(AnsiColors.green("TAC optimizado escrito en: " + optOut.toAbsolutePath()));
+        System.out.println();
+        System.out.println(AnsiColors.green("=== Compilación finalizada con éxito ==="));
+    }
+
+    private static Path intermediatePath(Path sourceFile) {
+        Path parent = sourceFile.toAbsolutePath().getParent();
+        if (parent == null) {
+            return Paths.get(INTERMEDIATE_OUTPUT).toAbsolutePath();
+        }
+        return parent.resolve(INTERMEDIATE_OUTPUT);
+    }
+
+    private static Path optimizedPath(Path sourceFile) {
+        Path parent = sourceFile.toAbsolutePath().getParent();
+        if (parent == null) {
+            return Paths.get(OPTIMIZED_OUTPUT).toAbsolutePath();
+        }
+        return parent.resolve(OPTIMIZED_OUTPUT);
+    }
+
+    private static void writeTextFile(Path out, String content) {
+        try (PrintWriter w = new PrintWriter(Files.newBufferedWriter(out, StandardCharsets.UTF_8))) {
+            w.print(content);
+        } catch (IOException e) {
+            System.err.println(AnsiColors.red("No se pudo escribir " + out + ": " + e.getMessage()));
+        }
     }
 
     /**

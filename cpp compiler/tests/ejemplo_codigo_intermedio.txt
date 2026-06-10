@@ -1,0 +1,22 @@
+// Archivo: ejemplo_codigo_intermedio.txt
+// Código de tres direcciones generado
+// Total de instrucciones: 18
+
+  0: // Código de tres direcciones generado
+  1: PROGRAMA_INICIO:
+  2: // Declaración de variables globales
+  3: func_main:
+  4: DECLARE x int
+  5: DECLARE y int
+  6: DECLARE z int
+  7: DECLARE w int
+  8: x = 7
+  9: t1 = x * 1
+ 10: y = t1
+ 11: t2 = y + 0
+ 12: z = t2
+ 13: t3 = x * 0
+ 14: w = t3
+ 15: t4 = z + w
+ 16: return t4
+ 17: PROGRAMA_FIN:

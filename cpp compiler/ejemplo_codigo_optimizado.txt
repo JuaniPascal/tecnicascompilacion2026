@@ -1,0 +1,74 @@
+
+// Código de tres direcciones OPTIMIZADO
+// Archivo: ejemplo_codigo_optimizado.txt
+// Optimizaciones aplicadas:
+//   1) Plegado de constantes (constant folding): tN = c1 op c2 -> tN = c
+//   2) Propagación de constantes: si tN = c y luego se usa tN -> reemplazar por c
+//   3) Simplificación algebraica: x+0, x*1, x-x, x*0, x/1, etc.
+//   4) Eliminación de código muerto: instrucciones inalcanzables tras return/goto
+//      y temporales calculados pero nunca usados.
+//
+// Estadísticas de optimización:
+//   Instrucciones originales : 51
+//   Instrucciones optimizadas: 51
+//   - Plegado de constantes      : 0
+//   - Propagación de constantes  : 0
+//   - Simplificaciones algebraicas: 0
+//   - Código muerto eliminado     : 0
+//   Cambios totales / líneas originales: 0.00%
+
+// Archivo: ejemplo_codigo_optimizado.txt
+// Código de tres direcciones OPTIMIZADO
+// Total de instrucciones: 51
+
+  0: // Código de tres direcciones generado
+  1: PROGRAMA_INICIO:
+  2: // Declaración de variables globales
+  3: DECLARE contadorGlobal int
+  4: DECLARE valorPi double
+  5: DECLARE inicial char
+  6: DECLARE activo bool
+  7: DECLARE temp int
+  8: func_sumar:
+  9: PARAM a int
+ 10: PARAM b int
+ 11: DECLARE resultado int
+ 12: t1 = a + b
+ 13: resultado = t1
+ 14: t2 = contadorGlobal + 1
+ 15: contadorGlobal = t2
+ 16: return resultado
+ 17: func_main:
+ 18: DECLARE estado int
+ 19: DECLARE temp int
+ 20: DECLARE numeros[3] int
+ 21: contadorGlobal = 0
+ 22: valorPi = 3.14
+ 23: inicial = 'M'
+ 24: numeros[0] = 10
+ 25: numeros[1] = 20
+ 26: numeros[2] = 30
+ 27: t3 = numeros[0] + numeros[1]
+ 28: temp = t3
+ 29: t4 = temp * 2
+ 30: temp = t4
+ 31: t5 = temp / 3
+ 32: temp = t5
+ 33: t6 = temp % 5
+ 34: temp = t6
+ 35: PARAM temp
+ 36: PARAM 5
+ 37: t7 = CALL func_sumar, 2
+ 38: estado = t7
+ 39: contadorGlobal = estado
+ 40: valorPi = temp
+ 41: inicial = 'X'
+ 42: t8 = estado > 0
+ 43: if_false t8 goto L_endif_1
+ 44: DECLARE auxiliar int
+ 45: t9 = estado + 10
+ 46: auxiliar = t9
+ 47: estado = auxiliar
+ 48: L_endif_1:
+ 49: return estado
+ 50: PROGRAMA_FIN:

@@ -1,4 +1,4 @@
-// Generated from C:/tmp/antlr-demo/cpp compiler/CPPSubsetParser.g4 by ANTLR 4.13.2
+// Generated from C:/Users/Juani/Documents/GitHub/tecnicascompilacion2026/cpp compiler/CPPSubsetParser.g4 by ANTLR 4.13.2
 package com.cppcompiler.parser;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
@@ -76,6 +76,50 @@ public interface CPPSubsetParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitIfStmt(CPPSubsetParser.IfStmtContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link CPPSubsetParser#whileStmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitWhileStmt(CPPSubsetParser.WhileStmtContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link CPPSubsetParser#forStmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitForStmt(CPPSubsetParser.ForStmtContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ForInitDecl}
+	 * labeled alternative in {@link CPPSubsetParser#forInit}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitForInitDecl(CPPSubsetParser.ForInitDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code ForInitAssign}
+	 * labeled alternative in {@link CPPSubsetParser#forInit}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitForInitAssign(CPPSubsetParser.ForInitAssignContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link CPPSubsetParser#forUpdate}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitForUpdate(CPPSubsetParser.ForUpdateContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link CPPSubsetParser#breakStmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBreakStmt(CPPSubsetParser.BreakStmtContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link CPPSubsetParser#continueStmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitContinueStmt(CPPSubsetParser.ContinueStmtContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link CPPSubsetParser#returnStmt}.
 	 * @param ctx the parse tree

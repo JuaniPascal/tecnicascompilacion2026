@@ -1,0 +1,37 @@
+
+// Código de tres direcciones OPTIMIZADO
+// Archivo: ejemplo_codigo_optimizado.txt
+// Optimizaciones aplicadas:
+//   1) Plegado de constantes (constant folding): tN = c1 op c2 -> tN = c
+//   2) Propagación de constantes: si tN = c y luego se usa tN -> reemplazar por c
+//   3) Simplificación algebraica: x+0, x*1, x-x, x*0, x/1, etc.
+//   4) Eliminación de código muerto: instrucciones inalcanzables tras return/goto
+//      y temporales calculados pero nunca usados.
+//
+// Estadísticas de optimización:
+//   Instrucciones originales : 18
+//   Instrucciones optimizadas: 14
+//   - Plegado de constantes        : 1
+//   - Propagación de constantes    : 8
+//   - Simplificaciones algebraicas : 3
+//   - Código muerto eliminado      : 4
+//   Cambios totales / líneas originales: 88.89%
+
+// Archivo: ejemplo_codigo_optimizado.txt
+// Código de tres direcciones OPTIMIZADO
+// Total de instrucciones: 14
+
+  0: // Código de tres direcciones generado
+  1: PROGRAMA_INICIO:
+  2: // Declaración de variables globales
+  3: func_main:
+  4: DECLARE x int
+  5: DECLARE y int
+  6: DECLARE z int
+  7: DECLARE w int
+  8: x = 7
+  9: y = 7
+ 10: z = 7
+ 11: w = 0
+ 12: return 7
+ 13: PROGRAMA_FIN:

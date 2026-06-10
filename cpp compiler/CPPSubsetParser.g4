@@ -23,6 +23,10 @@ statement
     : varDecl
     | assignment
     | ifStmt
+    | whileStmt
+    | forStmt
+    | breakStmt
+    | continueStmt
     | returnStmt
     | block
     ;
@@ -31,7 +35,27 @@ assignment : lvalue ASSIGN expr SEMI ;
 
 lvalue : IDENTIFIER ( LBRACK expr RBRACK )? ;
 
-ifStmt : KW_IF LPAREN expr RPAREN block ;
+ifStmt : KW_IF LPAREN expr RPAREN block ( KW_ELSE block )? ;
+
+whileStmt : KW_WHILE LPAREN expr RPAREN block ;
+
+forStmt
+    : KW_FOR LPAREN forInit? SEMI expr? SEMI forUpdate? RPAREN block
+    ;
+
+// Init del for: declaración con inicialización OBLIGATORIA, o asignación a lvalue.
+forInit
+    : typeName IDENTIFIER ASSIGN expr     # ForInitDecl
+    | lvalue ASSIGN expr                  # ForInitAssign
+    ;
+
+// Update del for: solo asignación a lvalue.
+forUpdate
+    : lvalue ASSIGN expr
+    ;
+
+breakStmt    : KW_BREAK SEMI ;
+continueStmt : KW_CONTINUE SEMI ;
 
 returnStmt : KW_RETURN expr? SEMI ;
 

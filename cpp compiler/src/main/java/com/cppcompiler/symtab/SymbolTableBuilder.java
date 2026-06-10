@@ -131,7 +131,31 @@ public final class SymbolTableBuilder extends CPPSubsetParserBaseVisitor<Void> {
             return;
         }
         if (ctx.ifStmt() != null) {
-            visitBlockStatements(ctx.ifStmt().block());
+            for (CPPSubsetParser.BlockContext b : ctx.ifStmt().block()) {
+                visitBlockStatements(b);
+            }
+            return;
+        }
+        if (ctx.whileStmt() != null) {
+            visitBlockStatements(ctx.whileStmt().block());
+            return;
+        }
+        if (ctx.forStmt() != null) {
+            // El "for" puede declarar una variable en el init: la registramos en el ámbito actual.
+            CPPSubsetParser.ForStmtContext fs = ctx.forStmt();
+            if (fs.forInit() instanceof CPPSubsetParser.ForInitDeclContext fid) {
+                String type = typeText(fid.typeName());
+                String name = fid.IDENTIFIER().getText();
+                int line = fid.IDENTIFIER().getSymbol().getLine();
+                int col = fid.IDENTIFIER().getSymbol().getCharPositionInLine();
+                String details = "[for-init] [private]";
+                String scope = "global".equals(currentScope) ? "global" : currentFunction;
+                rows.add(new SymbolRow(name, type, "variable", line, col, scope, details));
+            }
+            visitBlockStatements(fs.block());
+            return;
+        }
+        if (ctx.breakStmt() != null || ctx.continueStmt() != null) {
             return;
         }
         if (ctx.returnStmt() != null) {

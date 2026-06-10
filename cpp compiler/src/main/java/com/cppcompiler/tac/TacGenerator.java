@@ -1,5 +1,7 @@
 package com.cppcompiler.tac;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -14,6 +16,11 @@ import com.cppcompiler.parser.CPPSubsetParser.AtomContext;
 import com.cppcompiler.parser.CPPSubsetParser.BlockContext;
 import com.cppcompiler.parser.CPPSubsetParser.EqExprContext;
 import com.cppcompiler.parser.CPPSubsetParser.ExprContext;
+import com.cppcompiler.parser.CPPSubsetParser.ForInitAssignContext;
+import com.cppcompiler.parser.CPPSubsetParser.ForInitContext;
+import com.cppcompiler.parser.CPPSubsetParser.ForInitDeclContext;
+import com.cppcompiler.parser.CPPSubsetParser.ForStmtContext;
+import com.cppcompiler.parser.CPPSubsetParser.ForUpdateContext;
 import com.cppcompiler.parser.CPPSubsetParser.FuncDeclContext;
 import com.cppcompiler.parser.CPPSubsetParser.IfStmtContext;
 import com.cppcompiler.parser.CPPSubsetParser.LvalueContext;
@@ -29,18 +36,41 @@ import com.cppcompiler.parser.CPPSubsetParser.StatementContext;
 import com.cppcompiler.parser.CPPSubsetParser.TypeNameContext;
 import com.cppcompiler.parser.CPPSubsetParser.UnaryContext;
 import com.cppcompiler.parser.CPPSubsetParser.VarDeclContext;
+import com.cppcompiler.parser.CPPSubsetParser.WhileStmtContext;
 
-/** Genera TAC lineal a partir del árbol parseado. */
+/**
+ * Genera código de tres direcciones (TAC) lineal a partir del árbol parseado.
+ *
+ * <p>Convenciones:
+ * <ul>
+ *   <li>Los temporales se nombran {@code t1, t2, ...} (incrementales por programa).</li>
+ *   <li>Las etiquetas usan prefijos legibles: {@code L_else_N}, {@code L_endif_N},
+ *       {@code L_while_N}, {@code L_endwhile_N}, {@code L_for_N}, {@code L_forupd_N},
+ *       {@code L_endfor_N}.</li>
+ *   <li>Los saltos condicionales usan {@code if_false &lt;cond&gt; goto L} (saltar si la
+ *       condición es falsa) y {@code goto L} para incondicionales.</li>
+ *   <li>Las llamadas se traducen como una secuencia {@code PARAM e_i} seguida de
+ *       {@code t = CALL func_f, n} cuando hay valor de retorno, o {@code CALL func_f, n}
+ *       cuando se descarta.</li>
+ * </ul>
+ */
 public final class TacGenerator {
 
     private final TacProgram out = new TacProgram();
     private int tempCounter;
     private int ifCounter;
+    private int whileCounter;
+    private int forCounter;
+    /** Pila de etiquetas activas para break/continue (top = bucle más interno). */
+    private final Deque<LoopLabels> loopStack = new ArrayDeque<>();
 
     public TacProgram generate(ProgramContext ctx) {
         out.clear();
         tempCounter = 0;
         ifCounter = 0;
+        whileCounter = 0;
+        forCounter = 0;
+        loopStack.clear();
         out.emitComment("Código de tres direcciones generado");
         out.emit("PROGRAMA_INICIO:");
         out.emitComment("Declaración de variables globales");
@@ -100,6 +130,14 @@ public final class TacGenerator {
             emitAssignment(ctx.assignment());
         } else if (ctx.ifStmt() != null) {
             emitIf(ctx.ifStmt());
+        } else if (ctx.whileStmt() != null) {
+            emitWhile(ctx.whileStmt());
+        } else if (ctx.forStmt() != null) {
+            emitFor(ctx.forStmt());
+        } else if (ctx.breakStmt() != null) {
+            emitBreak();
+        } else if (ctx.continueStmt() != null) {
+            emitContinue();
         } else if (ctx.returnStmt() != null) {
             emitReturn(ctx.returnStmt());
         } else if (ctx.block() != null) {
@@ -133,16 +171,136 @@ public final class TacGenerator {
         return id;
     }
 
+    /**
+     * Esquema if-else canónico:
+     * <pre>
+     *   t = &lt;cond&gt;
+     *   if_false t goto L_else_N    // si no hay else, salta directo a L_endif_N
+     *   &lt;then&gt;
+     *   goto L_endif_N              // (solo cuando hay else)
+     * L_else_N:                      // (solo cuando hay else)
+     *   &lt;else&gt;
+     * L_endif_N:
+     * </pre>
+     */
     private void emitIf(IfStmtContext ctx) {
         int id = ++ifCounter;
+        boolean hasElse = ctx.block().size() > 1;
+        String elseL = "L_else_" + id;
+        String endL = "L_endif_" + id;
         String cond = genExpr(ctx.expr());
-        String thenL = "THEN_" + id;
-        String endL = "END_IF_" + id;
-        out.emit("if " + cond + " goto " + thenL);
-        out.emit("goto " + endL);
-        out.emit(thenL + ":");
-        emitBlock(ctx.block());
+        if (hasElse) {
+            out.emit("if_false " + cond + " goto " + elseL);
+            emitBlock(ctx.block(0));
+            out.emit("goto " + endL);
+            out.emit(elseL + ":");
+            emitBlock(ctx.block(1));
+        } else {
+            out.emit("if_false " + cond + " goto " + endL);
+            emitBlock(ctx.block(0));
+        }
         out.emit(endL + ":");
+    }
+
+    /**
+     * Esquema while:
+     * <pre>
+     * L_while_N:
+     *   t = &lt;cond&gt;
+     *   if_false t goto L_endwhile_N
+     *   &lt;body&gt;
+     *   goto L_while_N
+     * L_endwhile_N:
+     * </pre>
+     */
+    private void emitWhile(WhileStmtContext ctx) {
+        int id = ++whileCounter;
+        String startL = "L_while_" + id;
+        String endL = "L_endwhile_" + id;
+        out.emit(startL + ":");
+        String cond = genExpr(ctx.expr());
+        out.emit("if_false " + cond + " goto " + endL);
+        // continue salta a startL (re-evalúa la condición); break a endL.
+        loopStack.push(new LoopLabels(startL, endL));
+        emitBlock(ctx.block());
+        loopStack.pop();
+        out.emit("goto " + startL);
+        out.emit(endL + ":");
+    }
+
+    /**
+     * Esquema for(init; cond; update) body:
+     * <pre>
+     *   &lt;init&gt;
+     * L_for_N:
+     *   t = &lt;cond&gt;        // si no hay cond, no se emite el if_false
+     *   if_false t goto L_endfor_N
+     *   &lt;body&gt;
+     * L_forupd_N:           // continue salta acá
+     *   &lt;update&gt;
+     *   goto L_for_N
+     * L_endfor_N:
+     * </pre>
+     */
+    private void emitFor(ForStmtContext ctx) {
+        int id = ++forCounter;
+        String condL = "L_for_" + id;
+        String updL = "L_forupd_" + id;
+        String endL = "L_endfor_" + id;
+        if (ctx.forInit() != null) {
+            emitForInit(ctx.forInit());
+        }
+        out.emit(condL + ":");
+        if (ctx.expr() != null) {
+            String cond = genExpr(ctx.expr());
+            out.emit("if_false " + cond + " goto " + endL);
+        }
+        loopStack.push(new LoopLabels(updL, endL));
+        emitBlock(ctx.block());
+        loopStack.pop();
+        out.emit(updL + ":");
+        if (ctx.forUpdate() != null) {
+            emitForUpdate(ctx.forUpdate());
+        }
+        out.emit("goto " + condL);
+        out.emit(endL + ":");
+    }
+
+    private void emitForInit(ForInitContext ctx) {
+        if (ctx instanceof ForInitDeclContext fid) {
+            String type = typeText(fid.typeName());
+            String name = fid.IDENTIFIER().getText();
+            out.emit("DECLARE " + name + " " + type);
+            String rhs = genExpr(fid.expr());
+            out.emit(name + " = " + rhs);
+        } else if (ctx instanceof ForInitAssignContext fia) {
+            String rhs = genExpr(fia.expr());
+            String lhs = genLvalue(fia.lvalue());
+            out.emit(lhs + " = " + rhs);
+        }
+    }
+
+    private void emitForUpdate(ForUpdateContext ctx) {
+        String rhs = genExpr(ctx.expr());
+        String lhs = genLvalue(ctx.lvalue());
+        out.emit(lhs + " = " + rhs);
+    }
+
+    private void emitBreak() {
+        if (loopStack.isEmpty()) {
+            // Defensa: el semántico ya lo reportó como error, igual emitimos un comentario.
+            out.emitComment("BREAK fuera de bucle (ignorado)");
+            return;
+        }
+        out.emit("goto " + loopStack.peek().breakLabel);
+    }
+
+    private void emitContinue() {
+        if (loopStack.isEmpty()) {
+            out.emitComment("CONTINUE fuera de bucle (ignorado)");
+            return;
+        }
+        out.emit("goto " + loopStack.peek().continueLabel);
     }
 
     private void emitReturn(ReturnStmtContext ctx) {
@@ -261,25 +419,24 @@ public final class TacGenerator {
                     v = t;
                 }
             } else if (suf.LPAREN() != null) {
-                StringBuilder args = new StringBuilder();
                 ArgListContext al = suf.argList();
+                int argCount = 0;
                 if (al != null) {
                     List<ExprContext> es = al.expr();
+                    // Calculamos primero todos los argumentos para no entrelazar con sus PARAM.
+                    String[] argNames = new String[es.size()];
                     for (int i = 0; i < es.size(); i++) {
-                        if (i > 0) {
-                            args.append(", ");
-                        }
-                        args.append(genExpr(es.get(i)));
+                        argNames[i] = genExpr(es.get(i));
                     }
+                    for (String a : argNames) {
+                        out.emit("PARAM " + a);
+                    }
+                    argCount = argNames.length;
                 }
                 String func = stripCalls(v);
-                String argStr = args.toString();
-                if (argStr.isEmpty()) {
-                    out.emit("CALL func_" + func);
-                } else {
-                    out.emit("CALL func_" + func + ", " + argStr);
-                }
-                v = "RETURN_VALUE";
+                String t = newTemp();
+                out.emit(t + " = CALL func_" + func + ", " + argCount);
+                v = t;
             }
         }
         return v;
@@ -425,4 +582,7 @@ public final class TacGenerator {
     private static String typeText(TypeNameContext t) {
         return t.getText();
     }
+
+    /** Etiquetas de un bucle activo para soportar break/continue. */
+    private record LoopLabels(String continueLabel, String breakLabel) {}
 }

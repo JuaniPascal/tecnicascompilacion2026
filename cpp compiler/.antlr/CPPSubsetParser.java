@@ -1,5 +1,4 @@
-// Generated from C:/Users/Juani/Documents/GitHub/tecnicascompilacion2026/cpp compiler/CPPSubsetParser.g4 by ANTLR 4.13.2
-package com.cppcompiler.parser;
+// Generated from c:\Users\Juani\Documents\GitHub\tecnicascompilacion2026\cpp compiler\CPPSubsetParser.g4 by ANTLR 4.9.2
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -9,9 +8,9 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.ArrayList;
 
-@SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast", "CheckReturnValue", "this-escape"})
+@SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class CPPSubsetParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.13.2", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.9.2", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -137,7 +136,6 @@ public class CPPSubsetParser extends Parser {
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class ProgramContext extends ParserRuleContext {
 		public TerminalNode EOF() { return getToken(CPPSubsetParser.EOF, 0); }
 		public List<VarDeclContext> varDecl() {
@@ -157,9 +155,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_program; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitProgram(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterProgram(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitProgram(this);
 		}
 	}
 
@@ -173,7 +174,7 @@ public class CPPSubsetParser extends Parser {
 			setState(68);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 77312L) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << KW_VOID) | (1L << KW_BOOL) | (1L << KW_CHAR) | (1L << KW_INT) | (1L << KW_DOUBLE))) != 0)) {
 				{
 				setState(66);
 				_errHandler.sync(this);
@@ -211,7 +212,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class VarDeclContext extends ParserRuleContext {
 		public TypeNameContext typeName() {
 			return getRuleContext(TypeNameContext.class,0);
@@ -226,9 +226,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_varDecl; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitVarDecl(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterVarDecl(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitVarDecl(this);
 		}
 	}
 
@@ -268,7 +271,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class ArrayDimContext extends ParserRuleContext {
 		public TerminalNode LBRACK() { return getToken(CPPSubsetParser.LBRACK, 0); }
 		public TerminalNode INT_LITERAL() { return getToken(CPPSubsetParser.INT_LITERAL, 0); }
@@ -278,9 +280,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_arrayDim; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitArrayDim(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterArrayDim(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitArrayDim(this);
 		}
 	}
 
@@ -309,7 +314,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class FuncDeclContext extends ParserRuleContext {
 		public TypeNameContext typeName() {
 			return getRuleContext(TypeNameContext.class,0);
@@ -328,9 +332,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_funcDecl; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitFuncDecl(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterFuncDecl(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitFuncDecl(this);
 		}
 	}
 
@@ -350,7 +357,7 @@ public class CPPSubsetParser extends Parser {
 			setState(88);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 77312L) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << KW_VOID) | (1L << KW_BOOL) | (1L << KW_CHAR) | (1L << KW_INT) | (1L << KW_DOUBLE))) != 0)) {
 				{
 				setState(87);
 				paramList();
@@ -374,7 +381,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class ParamListContext extends ParserRuleContext {
 		public List<ParamContext> param() {
 			return getRuleContexts(ParamContext.class);
@@ -391,9 +397,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_paramList; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitParamList(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterParamList(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitParamList(this);
 		}
 	}
 
@@ -435,7 +444,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class ParamContext extends ParserRuleContext {
 		public TypeNameContext typeName() {
 			return getRuleContext(TypeNameContext.class,0);
@@ -446,9 +454,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_param; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitParam(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterParam(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitParam(this);
 		}
 	}
 
@@ -475,7 +486,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class BlockContext extends ParserRuleContext {
 		public TerminalNode LBRACE() { return getToken(CPPSubsetParser.LBRACE, 0); }
 		public TerminalNode RBRACE() { return getToken(CPPSubsetParser.RBRACE, 0); }
@@ -490,9 +500,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_block; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitBlock(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterBlock(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitBlock(this);
 		}
 	}
 
@@ -508,7 +521,7 @@ public class CPPSubsetParser extends Parser {
 			setState(108);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 524365312L) != 0) || _la==LBRACE || _la==IDENTIFIER) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << KW_VOID) | (1L << KW_BOOL) | (1L << KW_CHAR) | (1L << KW_INT) | (1L << KW_DOUBLE) | (1L << KW_IF) | (1L << KW_WHILE) | (1L << KW_FOR) | (1L << KW_BREAK) | (1L << KW_CONTINUE) | (1L << KW_RETURN))) != 0) || _la==LBRACE || _la==IDENTIFIER) {
 				{
 				{
 				setState(105);
@@ -534,7 +547,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class StatementContext extends ParserRuleContext {
 		public VarDeclContext varDecl() {
 			return getRuleContext(VarDeclContext.class,0);
@@ -568,9 +580,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_statement; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitStatement(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterStatement(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitStatement(this);
 		}
 	}
 
@@ -663,7 +678,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class AssignmentContext extends ParserRuleContext {
 		public LvalueContext lvalue() {
 			return getRuleContext(LvalueContext.class,0);
@@ -678,9 +692,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_assignment; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitAssignment(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterAssignment(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitAssignment(this);
 		}
 	}
 
@@ -711,7 +728,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class LvalueContext extends ParserRuleContext {
 		public TerminalNode IDENTIFIER() { return getToken(CPPSubsetParser.IDENTIFIER, 0); }
 		public TerminalNode LBRACK() { return getToken(CPPSubsetParser.LBRACK, 0); }
@@ -724,9 +740,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_lvalue; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitLvalue(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterLvalue(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitLvalue(this);
 		}
 	}
 
@@ -766,7 +785,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class IfStmtContext extends ParserRuleContext {
 		public TerminalNode KW_IF() { return getToken(CPPSubsetParser.KW_IF, 0); }
 		public TerminalNode LPAREN() { return getToken(CPPSubsetParser.LPAREN, 0); }
@@ -786,9 +804,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_ifStmt; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitIfStmt(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterIfStmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitIfStmt(this);
 		}
 	}
 
@@ -834,7 +855,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class WhileStmtContext extends ParserRuleContext {
 		public TerminalNode KW_WHILE() { return getToken(CPPSubsetParser.KW_WHILE, 0); }
 		public TerminalNode LPAREN() { return getToken(CPPSubsetParser.LPAREN, 0); }
@@ -850,9 +870,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_whileStmt; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitWhileStmt(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterWhileStmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitWhileStmt(this);
 		}
 	}
 
@@ -885,7 +908,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class ForStmtContext extends ParserRuleContext {
 		public TerminalNode KW_FOR() { return getToken(CPPSubsetParser.KW_FOR, 0); }
 		public TerminalNode LPAREN() { return getToken(CPPSubsetParser.LPAREN, 0); }
@@ -911,9 +933,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_forStmt; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitForStmt(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterForStmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitForStmt(this);
 		}
 	}
 
@@ -931,7 +956,7 @@ public class CPPSubsetParser extends Parser {
 			setState(154);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 77312L) != 0) || _la==IDENTIFIER) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << KW_VOID) | (1L << KW_BOOL) | (1L << KW_CHAR) | (1L << KW_INT) | (1L << KW_DOUBLE))) != 0) || _la==IDENTIFIER) {
 				{
 				setState(153);
 				forInit();
@@ -943,7 +968,7 @@ public class CPPSubsetParser extends Parser {
 			setState(158);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 3298534883680L) != 0) || ((((_la - 66)) & ~0x3f) == 0 && ((1L << (_la - 66)) & 16920577L) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << FLOAT_LITERAL) | (1L << INT_LITERAL) | (1L << CHAR_LITERAL) | (1L << KW_TRUE) | (1L << KW_FALSE))) != 0) || ((((_la - 66)) & ~0x3f) == 0 && ((1L << (_la - 66)) & ((1L << (LPAREN - 66)) | (1L << (PLUS - 66)) | (1L << (MINUS - 66)) | (1L << (NOT - 66)) | (1L << (IDENTIFIER - 66)))) != 0)) {
 				{
 				setState(157);
 				expr();
@@ -979,7 +1004,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class ForInitContext extends ParserRuleContext {
 		public ForInitContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -991,7 +1015,6 @@ public class CPPSubsetParser extends Parser {
 			super.copyFrom(ctx);
 		}
 	}
-	@SuppressWarnings("CheckReturnValue")
 	public static class ForInitAssignContext extends ForInitContext {
 		public LvalueContext lvalue() {
 			return getRuleContext(LvalueContext.class,0);
@@ -1002,12 +1025,14 @@ public class CPPSubsetParser extends Parser {
 		}
 		public ForInitAssignContext(ForInitContext ctx) { copyFrom(ctx); }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitForInitAssign(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterForInitAssign(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitForInitAssign(this);
 		}
 	}
-	@SuppressWarnings("CheckReturnValue")
 	public static class ForInitDeclContext extends ForInitContext {
 		public TypeNameContext typeName() {
 			return getRuleContext(TypeNameContext.class,0);
@@ -1019,9 +1044,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		public ForInitDeclContext(ForInitContext ctx) { copyFrom(ctx); }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitForInitDecl(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterForInitDecl(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitForInitDecl(this);
 		}
 	}
 
@@ -1077,7 +1105,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class ForUpdateContext extends ParserRuleContext {
 		public LvalueContext lvalue() {
 			return getRuleContext(LvalueContext.class,0);
@@ -1091,9 +1118,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_forUpdate; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitForUpdate(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterForUpdate(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitForUpdate(this);
 		}
 	}
 
@@ -1122,7 +1152,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class BreakStmtContext extends ParserRuleContext {
 		public TerminalNode KW_BREAK() { return getToken(CPPSubsetParser.KW_BREAK, 0); }
 		public TerminalNode SEMI() { return getToken(CPPSubsetParser.SEMI, 0); }
@@ -1131,9 +1160,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_breakStmt; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitBreakStmt(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterBreakStmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitBreakStmt(this);
 		}
 	}
 
@@ -1160,7 +1192,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class ContinueStmtContext extends ParserRuleContext {
 		public TerminalNode KW_CONTINUE() { return getToken(CPPSubsetParser.KW_CONTINUE, 0); }
 		public TerminalNode SEMI() { return getToken(CPPSubsetParser.SEMI, 0); }
@@ -1169,9 +1200,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_continueStmt; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitContinueStmt(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterContinueStmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitContinueStmt(this);
 		}
 	}
 
@@ -1198,7 +1232,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class ReturnStmtContext extends ParserRuleContext {
 		public TerminalNode KW_RETURN() { return getToken(CPPSubsetParser.KW_RETURN, 0); }
 		public TerminalNode SEMI() { return getToken(CPPSubsetParser.SEMI, 0); }
@@ -1210,9 +1243,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_returnStmt; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitReturnStmt(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterReturnStmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitReturnStmt(this);
 		}
 	}
 
@@ -1228,7 +1264,7 @@ public class CPPSubsetParser extends Parser {
 			setState(190);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 3298534883680L) != 0) || ((((_la - 66)) & ~0x3f) == 0 && ((1L << (_la - 66)) & 16920577L) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << FLOAT_LITERAL) | (1L << INT_LITERAL) | (1L << CHAR_LITERAL) | (1L << KW_TRUE) | (1L << KW_FALSE))) != 0) || ((((_la - 66)) & ~0x3f) == 0 && ((1L << (_la - 66)) & ((1L << (LPAREN - 66)) | (1L << (PLUS - 66)) | (1L << (MINUS - 66)) | (1L << (NOT - 66)) | (1L << (IDENTIFIER - 66)))) != 0)) {
 				{
 				setState(189);
 				expr();
@@ -1250,7 +1286,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class TypeNameContext extends ParserRuleContext {
 		public TerminalNode KW_INT() { return getToken(CPPSubsetParser.KW_INT, 0); }
 		public TerminalNode KW_DOUBLE() { return getToken(CPPSubsetParser.KW_DOUBLE, 0); }
@@ -1262,9 +1297,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_typeName; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitTypeName(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterTypeName(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitTypeName(this);
 		}
 	}
 
@@ -1277,7 +1315,7 @@ public class CPPSubsetParser extends Parser {
 			{
 			setState(194);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 77312L) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << KW_VOID) | (1L << KW_BOOL) | (1L << KW_CHAR) | (1L << KW_INT) | (1L << KW_DOUBLE))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -1298,7 +1336,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class ExprContext extends ParserRuleContext {
 		public OrExprContext orExpr() {
 			return getRuleContext(OrExprContext.class,0);
@@ -1308,9 +1345,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_expr; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitExpr(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterExpr(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitExpr(this);
 		}
 	}
 
@@ -1335,7 +1375,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class OrExprContext extends ParserRuleContext {
 		public List<AndExprContext> andExpr() {
 			return getRuleContexts(AndExprContext.class);
@@ -1352,9 +1391,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_orExpr; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitOrExpr(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterOrExpr(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitOrExpr(this);
 		}
 	}
 
@@ -1396,7 +1438,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class AndExprContext extends ParserRuleContext {
 		public List<EqExprContext> eqExpr() {
 			return getRuleContexts(EqExprContext.class);
@@ -1413,9 +1454,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_andExpr; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitAndExpr(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterAndExpr(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitAndExpr(this);
 		}
 	}
 
@@ -1457,7 +1501,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class EqExprContext extends ParserRuleContext {
 		public List<RelExprContext> relExpr() {
 			return getRuleContexts(RelExprContext.class);
@@ -1478,9 +1521,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_eqExpr; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitEqExpr(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterEqExpr(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitEqExpr(this);
 		}
 	}
 
@@ -1530,7 +1576,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class RelExprContext extends ParserRuleContext {
 		public List<AddExprContext> addExpr() {
 			return getRuleContexts(AddExprContext.class);
@@ -1559,9 +1604,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_relExpr; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitRelExpr(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterRelExpr(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitRelExpr(this);
 		}
 	}
 
@@ -1577,12 +1625,12 @@ public class CPPSubsetParser extends Parser {
 			setState(227);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while (((((_la - 50)) & ~0x3f) == 0 && ((1L << (_la - 50)) & 51539607555L) != 0)) {
+			while (((((_la - 50)) & ~0x3f) == 0 && ((1L << (_la - 50)) & ((1L << (LE - 50)) | (1L << (GE - 50)) | (1L << (LT - 50)) | (1L << (GT - 50)))) != 0)) {
 				{
 				{
 				setState(223);
 				_la = _input.LA(1);
-				if ( !(((((_la - 50)) & ~0x3f) == 0 && ((1L << (_la - 50)) & 51539607555L) != 0)) ) {
+				if ( !(((((_la - 50)) & ~0x3f) == 0 && ((1L << (_la - 50)) & ((1L << (LE - 50)) | (1L << (GE - 50)) | (1L << (LT - 50)) | (1L << (GT - 50)))) != 0)) ) {
 				_errHandler.recoverInline(this);
 				}
 				else {
@@ -1611,7 +1659,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class AddExprContext extends ParserRuleContext {
 		public List<MulExprContext> mulExpr() {
 			return getRuleContexts(MulExprContext.class);
@@ -1632,9 +1679,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_addExpr; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitAddExpr(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterAddExpr(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitAddExpr(this);
 		}
 	}
 
@@ -1684,7 +1734,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class MulExprContext extends ParserRuleContext {
 		public List<UnaryContext> unary() {
 			return getRuleContexts(UnaryContext.class);
@@ -1709,9 +1758,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_mulExpr; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitMulExpr(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterMulExpr(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitMulExpr(this);
 		}
 	}
 
@@ -1727,12 +1779,12 @@ public class CPPSubsetParser extends Parser {
 			setState(243);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while (((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & 25L) != 0)) {
+			while (((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & ((1L << (STAR - 77)) | (1L << (DIV - 77)) | (1L << (MOD - 77)))) != 0)) {
 				{
 				{
 				setState(239);
 				_la = _input.LA(1);
-				if ( !(((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & 25L) != 0)) ) {
+				if ( !(((((_la - 77)) & ~0x3f) == 0 && ((1L << (_la - 77)) & ((1L << (STAR - 77)) | (1L << (DIV - 77)) | (1L << (MOD - 77)))) != 0)) ) {
 				_errHandler.recoverInline(this);
 				}
 				else {
@@ -1761,7 +1813,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class UnaryContext extends ParserRuleContext {
 		public PostfixContext postfix() {
 			return getRuleContext(PostfixContext.class,0);
@@ -1774,9 +1825,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_unary; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitUnary(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterUnary(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitUnary(this);
 		}
 	}
 
@@ -1790,11 +1844,11 @@ public class CPPSubsetParser extends Parser {
 			setState(247);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			if (((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & 35L) != 0)) {
+			if (((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & ((1L << (PLUS - 78)) | (1L << (MINUS - 78)) | (1L << (NOT - 78)))) != 0)) {
 				{
 				setState(246);
 				_la = _input.LA(1);
-				if ( !(((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & 35L) != 0)) ) {
+				if ( !(((((_la - 78)) & ~0x3f) == 0 && ((1L << (_la - 78)) & ((1L << (PLUS - 78)) | (1L << (MINUS - 78)) | (1L << (NOT - 78)))) != 0)) ) {
 				_errHandler.recoverInline(this);
 				}
 				else {
@@ -1820,7 +1874,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class PostfixContext extends ParserRuleContext {
 		public AtomContext atom() {
 			return getRuleContext(AtomContext.class,0);
@@ -1836,9 +1889,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_postfix; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitPostfix(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterPostfix(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitPostfix(this);
 		}
 	}
 
@@ -1878,7 +1934,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class PostfixSuffixContext extends ParserRuleContext {
 		public TerminalNode LBRACK() { return getToken(CPPSubsetParser.LBRACK, 0); }
 		public ExprContext expr() {
@@ -1895,9 +1950,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_postfixSuffix; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitPostfixSuffix(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterPostfixSuffix(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitPostfixSuffix(this);
 		}
 	}
 
@@ -1928,7 +1986,7 @@ public class CPPSubsetParser extends Parser {
 				setState(264);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 3298534883680L) != 0) || ((((_la - 66)) & ~0x3f) == 0 && ((1L << (_la - 66)) & 16920577L) != 0)) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << FLOAT_LITERAL) | (1L << INT_LITERAL) | (1L << CHAR_LITERAL) | (1L << KW_TRUE) | (1L << KW_FALSE))) != 0) || ((((_la - 66)) & ~0x3f) == 0 && ((1L << (_la - 66)) & ((1L << (LPAREN - 66)) | (1L << (PLUS - 66)) | (1L << (MINUS - 66)) | (1L << (NOT - 66)) | (1L << (IDENTIFIER - 66)))) != 0)) {
 					{
 					setState(263);
 					argList();
@@ -1954,7 +2012,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class AtomContext extends ParserRuleContext {
 		public LiteralContext literal() {
 			return getRuleContext(LiteralContext.class,0);
@@ -1970,9 +2027,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_atom; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitAtom(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterAtom(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitAtom(this);
 		}
 	}
 
@@ -2027,7 +2087,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class ArgListContext extends ParserRuleContext {
 		public List<ExprContext> expr() {
 			return getRuleContexts(ExprContext.class);
@@ -2044,9 +2103,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_argList; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitArgList(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterArgList(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitArgList(this);
 		}
 	}
 
@@ -2088,7 +2150,6 @@ public class CPPSubsetParser extends Parser {
 		return _localctx;
 	}
 
-	@SuppressWarnings("CheckReturnValue")
 	public static class LiteralContext extends ParserRuleContext {
 		public TerminalNode INT_LITERAL() { return getToken(CPPSubsetParser.INT_LITERAL, 0); }
 		public TerminalNode FLOAT_LITERAL() { return getToken(CPPSubsetParser.FLOAT_LITERAL, 0); }
@@ -2100,9 +2161,12 @@ public class CPPSubsetParser extends Parser {
 		}
 		@Override public int getRuleIndex() { return RULE_literal; }
 		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof CPPSubsetParserVisitor ) return ((CPPSubsetParserVisitor<? extends T>)visitor).visitLiteral(this);
-			else return visitor.visitChildren(this);
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).enterLiteral(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof CPPSubsetParserListener ) ((CPPSubsetParserListener)listener).exitLiteral(this);
 		}
 	}
 
@@ -2115,7 +2179,7 @@ public class CPPSubsetParser extends Parser {
 			{
 			setState(285);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 3298534883680L) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << FLOAT_LITERAL) | (1L << INT_LITERAL) | (1L << CHAR_LITERAL) | (1L << KW_TRUE) | (1L << KW_FALSE))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -2137,181 +2201,101 @@ public class CPPSubsetParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001[\u0120\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
-		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
-		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0002"+
-		"\b\u0007\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b\u0002"+
-		"\f\u0007\f\u0002\r\u0007\r\u0002\u000e\u0007\u000e\u0002\u000f\u0007\u000f"+
-		"\u0002\u0010\u0007\u0010\u0002\u0011\u0007\u0011\u0002\u0012\u0007\u0012"+
-		"\u0002\u0013\u0007\u0013\u0002\u0014\u0007\u0014\u0002\u0015\u0007\u0015"+
-		"\u0002\u0016\u0007\u0016\u0002\u0017\u0007\u0017\u0002\u0018\u0007\u0018"+
-		"\u0002\u0019\u0007\u0019\u0002\u001a\u0007\u001a\u0002\u001b\u0007\u001b"+
-		"\u0002\u001c\u0007\u001c\u0002\u001d\u0007\u001d\u0002\u001e\u0007\u001e"+
-		"\u0002\u001f\u0007\u001f\u0001\u0000\u0001\u0000\u0005\u0000C\b\u0000"+
-		"\n\u0000\f\u0000F\t\u0000\u0001\u0000\u0001\u0000\u0001\u0001\u0001\u0001"+
-		"\u0001\u0001\u0003\u0001M\b\u0001\u0001\u0001\u0001\u0001\u0001\u0002"+
-		"\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0003\u0001\u0003\u0001\u0003"+
-		"\u0001\u0003\u0003\u0003Y\b\u0003\u0001\u0003\u0001\u0003\u0001\u0003"+
-		"\u0001\u0004\u0001\u0004\u0001\u0004\u0005\u0004a\b\u0004\n\u0004\f\u0004"+
-		"d\t\u0004\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0006\u0001\u0006"+
-		"\u0005\u0006k\b\u0006\n\u0006\f\u0006n\t\u0006\u0001\u0006\u0001\u0006"+
-		"\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007"+
-		"\u0001\u0007\u0001\u0007\u0001\u0007\u0003\u0007{\b\u0007\u0001\b\u0001"+
-		"\b\u0001\b\u0001\b\u0001\b\u0001\t\u0001\t\u0001\t\u0001\t\u0001\t\u0003"+
-		"\t\u0087\b\t\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0001\n\u0003"+
-		"\n\u0090\b\n\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b\u0001\u000b"+
-		"\u0001\u000b\u0001\f\u0001\f\u0001\f\u0003\f\u009b\b\f\u0001\f\u0001\f"+
-		"\u0003\f\u009f\b\f\u0001\f\u0001\f\u0003\f\u00a3\b\f\u0001\f\u0001\f\u0001"+
-		"\f\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001"+
-		"\r\u0003\r\u00b1\b\r\u0001\u000e\u0001\u000e\u0001\u000e\u0001\u000e\u0001"+
-		"\u000f\u0001\u000f\u0001\u000f\u0001\u0010\u0001\u0010\u0001\u0010\u0001"+
-		"\u0011\u0001\u0011\u0003\u0011\u00bf\b\u0011\u0001\u0011\u0001\u0011\u0001"+
-		"\u0012\u0001\u0012\u0001\u0013\u0001\u0013\u0001\u0014\u0001\u0014\u0001"+
-		"\u0014\u0005\u0014\u00ca\b\u0014\n\u0014\f\u0014\u00cd\t\u0014\u0001\u0015"+
-		"\u0001\u0015\u0001\u0015\u0005\u0015\u00d2\b\u0015\n\u0015\f\u0015\u00d5"+
-		"\t\u0015\u0001\u0016\u0001\u0016\u0001\u0016\u0005\u0016\u00da\b\u0016"+
-		"\n\u0016\f\u0016\u00dd\t\u0016\u0001\u0017\u0001\u0017\u0001\u0017\u0005"+
-		"\u0017\u00e2\b\u0017\n\u0017\f\u0017\u00e5\t\u0017\u0001\u0018\u0001\u0018"+
-		"\u0001\u0018\u0005\u0018\u00ea\b\u0018\n\u0018\f\u0018\u00ed\t\u0018\u0001"+
-		"\u0019\u0001\u0019\u0001\u0019\u0005\u0019\u00f2\b\u0019\n\u0019\f\u0019"+
-		"\u00f5\t\u0019\u0001\u001a\u0003\u001a\u00f8\b\u001a\u0001\u001a\u0001"+
-		"\u001a\u0001\u001b\u0001\u001b\u0005\u001b\u00fe\b\u001b\n\u001b\f\u001b"+
-		"\u0101\t\u001b\u0001\u001c\u0001\u001c\u0001\u001c\u0001\u001c\u0001\u001c"+
-		"\u0001\u001c\u0003\u001c\u0109\b\u001c\u0001\u001c\u0003\u001c\u010c\b"+
-		"\u001c\u0001\u001d\u0001\u001d\u0001\u001d\u0001\u001d\u0001\u001d\u0001"+
-		"\u001d\u0003\u001d\u0114\b\u001d\u0001\u001e\u0001\u001e\u0001\u001e\u0005"+
-		"\u001e\u0119\b\u001e\n\u001e\f\u001e\u011c\t\u001e\u0001\u001f\u0001\u001f"+
-		"\u0001\u001f\u0000\u0000 \u0000\u0002\u0004\u0006\b\n\f\u000e\u0010\u0012"+
-		"\u0014\u0016\u0018\u001a\u001c\u001e \"$&(*,.02468:<>\u0000\u0007\u0003"+
-		"\u0000\t\u000b\r\r\u0010\u0010\u0001\u000045\u0002\u000023TU\u0001\u0000"+
-		"NO\u0002\u0000MMPQ\u0002\u0000NOSS\u0003\u0000\u0005\u0006\b\b()\u0121"+
-		"\u0000D\u0001\u0000\u0000\u0000\u0002I\u0001\u0000\u0000\u0000\u0004P"+
-		"\u0001\u0000\u0000\u0000\u0006T\u0001\u0000\u0000\u0000\b]\u0001\u0000"+
-		"\u0000\u0000\ne\u0001\u0000\u0000\u0000\fh\u0001\u0000\u0000\u0000\u000e"+
-		"z\u0001\u0000\u0000\u0000\u0010|\u0001\u0000\u0000\u0000\u0012\u0081\u0001"+
-		"\u0000\u0000\u0000\u0014\u0088\u0001\u0000\u0000\u0000\u0016\u0091\u0001"+
-		"\u0000\u0000\u0000\u0018\u0097\u0001\u0000\u0000\u0000\u001a\u00b0\u0001"+
-		"\u0000\u0000\u0000\u001c\u00b2\u0001\u0000\u0000\u0000\u001e\u00b6\u0001"+
-		"\u0000\u0000\u0000 \u00b9\u0001\u0000\u0000\u0000\"\u00bc\u0001\u0000"+
-		"\u0000\u0000$\u00c2\u0001\u0000\u0000\u0000&\u00c4\u0001\u0000\u0000\u0000"+
-		"(\u00c6\u0001\u0000\u0000\u0000*\u00ce\u0001\u0000\u0000\u0000,\u00d6"+
-		"\u0001\u0000\u0000\u0000.\u00de\u0001\u0000\u0000\u00000\u00e6\u0001\u0000"+
-		"\u0000\u00002\u00ee\u0001\u0000\u0000\u00004\u00f7\u0001\u0000\u0000\u0000"+
-		"6\u00fb\u0001\u0000\u0000\u00008\u010b\u0001\u0000\u0000\u0000:\u0113"+
-		"\u0001\u0000\u0000\u0000<\u0115\u0001\u0000\u0000\u0000>\u011d\u0001\u0000"+
-		"\u0000\u0000@C\u0003\u0002\u0001\u0000AC\u0003\u0006\u0003\u0000B@\u0001"+
-		"\u0000\u0000\u0000BA\u0001\u0000\u0000\u0000CF\u0001\u0000\u0000\u0000"+
-		"DB\u0001\u0000\u0000\u0000DE\u0001\u0000\u0000\u0000EG\u0001\u0000\u0000"+
-		"\u0000FD\u0001\u0000\u0000\u0000GH\u0005\u0000\u0000\u0001H\u0001\u0001"+
-		"\u0000\u0000\u0000IJ\u0003$\u0012\u0000JL\u0005Z\u0000\u0000KM\u0003\u0004"+
-		"\u0002\u0000LK\u0001\u0000\u0000\u0000LM\u0001\u0000\u0000\u0000MN\u0001"+
-		"\u0000\u0000\u0000NO\u0005H\u0000\u0000O\u0003\u0001\u0000\u0000\u0000"+
-		"PQ\u0005F\u0000\u0000QR\u0005\u0006\u0000\u0000RS\u0005G\u0000\u0000S"+
-		"\u0005\u0001\u0000\u0000\u0000TU\u0003$\u0012\u0000UV\u0005Z\u0000\u0000"+
-		"VX\u0005B\u0000\u0000WY\u0003\b\u0004\u0000XW\u0001\u0000\u0000\u0000"+
-		"XY\u0001\u0000\u0000\u0000YZ\u0001\u0000\u0000\u0000Z[\u0005C\u0000\u0000"+
-		"[\\\u0003\f\u0006\u0000\\\u0007\u0001\u0000\u0000\u0000]b\u0003\n\u0005"+
-		"\u0000^_\u0005I\u0000\u0000_a\u0003\n\u0005\u0000`^\u0001\u0000\u0000"+
-		"\u0000ad\u0001\u0000\u0000\u0000b`\u0001\u0000\u0000\u0000bc\u0001\u0000"+
-		"\u0000\u0000c\t\u0001\u0000\u0000\u0000db\u0001\u0000\u0000\u0000ef\u0003"+
-		"$\u0012\u0000fg\u0005Z\u0000\u0000g\u000b\u0001\u0000\u0000\u0000hl\u0005"+
-		"D\u0000\u0000ik\u0003\u000e\u0007\u0000ji\u0001\u0000\u0000\u0000kn\u0001"+
-		"\u0000\u0000\u0000lj\u0001\u0000\u0000\u0000lm\u0001\u0000\u0000\u0000"+
-		"mo\u0001\u0000\u0000\u0000nl\u0001\u0000\u0000\u0000op\u0005E\u0000\u0000"+
-		"p\r\u0001\u0000\u0000\u0000q{\u0003\u0002\u0001\u0000r{\u0003\u0010\b"+
-		"\u0000s{\u0003\u0014\n\u0000t{\u0003\u0016\u000b\u0000u{\u0003\u0018\f"+
-		"\u0000v{\u0003\u001e\u000f\u0000w{\u0003 \u0010\u0000x{\u0003\"\u0011"+
-		"\u0000y{\u0003\f\u0006\u0000zq\u0001\u0000\u0000\u0000zr\u0001\u0000\u0000"+
-		"\u0000zs\u0001\u0000\u0000\u0000zt\u0001\u0000\u0000\u0000zu\u0001\u0000"+
-		"\u0000\u0000zv\u0001\u0000\u0000\u0000zw\u0001\u0000\u0000\u0000zx\u0001"+
-		"\u0000\u0000\u0000zy\u0001\u0000\u0000\u0000{\u000f\u0001\u0000\u0000"+
-		"\u0000|}\u0003\u0012\t\u0000}~\u0005Y\u0000\u0000~\u007f\u0003&\u0013"+
-		"\u0000\u007f\u0080\u0005H\u0000\u0000\u0080\u0011\u0001\u0000\u0000\u0000"+
-		"\u0081\u0086\u0005Z\u0000\u0000\u0082\u0083\u0005F\u0000\u0000\u0083\u0084"+
-		"\u0003&\u0013\u0000\u0084\u0085\u0005G\u0000\u0000\u0085\u0087\u0001\u0000"+
-		"\u0000\u0000\u0086\u0082\u0001\u0000\u0000\u0000\u0086\u0087\u0001\u0000"+
-		"\u0000\u0000\u0087\u0013\u0001\u0000\u0000\u0000\u0088\u0089\u0005\u0016"+
-		"\u0000\u0000\u0089\u008a\u0005B\u0000\u0000\u008a\u008b\u0003&\u0013\u0000"+
-		"\u008b\u008c\u0005C\u0000\u0000\u008c\u008f\u0003\f\u0006\u0000\u008d"+
-		"\u008e\u0005\u0017\u0000\u0000\u008e\u0090\u0003\f\u0006\u0000\u008f\u008d"+
-		"\u0001\u0000\u0000\u0000\u008f\u0090\u0001\u0000\u0000\u0000\u0090\u0015"+
-		"\u0001\u0000\u0000\u0000\u0091\u0092\u0005\u0018\u0000\u0000\u0092\u0093"+
-		"\u0005B\u0000\u0000\u0093\u0094\u0003&\u0013\u0000\u0094\u0095\u0005C"+
-		"\u0000\u0000\u0095\u0096\u0003\f\u0006\u0000\u0096\u0017\u0001\u0000\u0000"+
-		"\u0000\u0097\u0098\u0005\u0019\u0000\u0000\u0098\u009a\u0005B\u0000\u0000"+
-		"\u0099\u009b\u0003\u001a\r\u0000\u009a\u0099\u0001\u0000\u0000\u0000\u009a"+
-		"\u009b\u0001\u0000\u0000\u0000\u009b\u009c\u0001\u0000\u0000\u0000\u009c"+
-		"\u009e\u0005H\u0000\u0000\u009d\u009f\u0003&\u0013\u0000\u009e\u009d\u0001"+
-		"\u0000\u0000\u0000\u009e\u009f\u0001\u0000\u0000\u0000\u009f\u00a0\u0001"+
-		"\u0000\u0000\u0000\u00a0\u00a2\u0005H\u0000\u0000\u00a1\u00a3\u0003\u001c"+
-		"\u000e\u0000\u00a2\u00a1\u0001\u0000\u0000\u0000\u00a2\u00a3\u0001\u0000"+
-		"\u0000\u0000\u00a3\u00a4\u0001\u0000\u0000\u0000\u00a4\u00a5\u0005C\u0000"+
-		"\u0000\u00a5\u00a6\u0003\f\u0006\u0000\u00a6\u0019\u0001\u0000\u0000\u0000"+
-		"\u00a7\u00a8\u0003$\u0012\u0000\u00a8\u00a9\u0005Z\u0000\u0000\u00a9\u00aa"+
-		"\u0005Y\u0000\u0000\u00aa\u00ab\u0003&\u0013\u0000\u00ab\u00b1\u0001\u0000"+
-		"\u0000\u0000\u00ac\u00ad\u0003\u0012\t\u0000\u00ad\u00ae\u0005Y\u0000"+
-		"\u0000\u00ae\u00af\u0003&\u0013\u0000\u00af\u00b1\u0001\u0000\u0000\u0000"+
-		"\u00b0\u00a7\u0001\u0000\u0000\u0000\u00b0\u00ac\u0001\u0000\u0000\u0000"+
-		"\u00b1\u001b\u0001\u0000\u0000\u0000\u00b2\u00b3\u0003\u0012\t\u0000\u00b3"+
-		"\u00b4\u0005Y\u0000\u0000\u00b4\u00b5\u0003&\u0013\u0000\u00b5\u001d\u0001"+
-		"\u0000\u0000\u0000\u00b6\u00b7\u0005\u001a\u0000\u0000\u00b7\u00b8\u0005"+
-		"H\u0000\u0000\u00b8\u001f\u0001\u0000\u0000\u0000\u00b9\u00ba\u0005\u001b"+
-		"\u0000\u0000\u00ba\u00bb\u0005H\u0000\u0000\u00bb!\u0001\u0000\u0000\u0000"+
-		"\u00bc\u00be\u0005\u001c\u0000\u0000\u00bd\u00bf\u0003&\u0013\u0000\u00be"+
-		"\u00bd\u0001\u0000\u0000\u0000\u00be\u00bf\u0001\u0000\u0000\u0000\u00bf"+
-		"\u00c0\u0001\u0000\u0000\u0000\u00c0\u00c1\u0005H\u0000\u0000\u00c1#\u0001"+
-		"\u0000\u0000\u0000\u00c2\u00c3\u0007\u0000\u0000\u0000\u00c3%\u0001\u0000"+
-		"\u0000\u0000\u00c4\u00c5\u0003(\u0014\u0000\u00c5\'\u0001\u0000\u0000"+
-		"\u0000\u00c6\u00cb\u0003*\u0015\u0000\u00c7\u00c8\u00057\u0000\u0000\u00c8"+
-		"\u00ca\u0003*\u0015\u0000\u00c9\u00c7\u0001\u0000\u0000\u0000\u00ca\u00cd"+
-		"\u0001\u0000\u0000\u0000\u00cb\u00c9\u0001\u0000\u0000\u0000\u00cb\u00cc"+
-		"\u0001\u0000\u0000\u0000\u00cc)\u0001\u0000\u0000\u0000\u00cd\u00cb\u0001"+
-		"\u0000\u0000\u0000\u00ce\u00d3\u0003,\u0016\u0000\u00cf\u00d0\u00056\u0000"+
-		"\u0000\u00d0\u00d2\u0003,\u0016\u0000\u00d1\u00cf\u0001\u0000\u0000\u0000"+
-		"\u00d2\u00d5\u0001\u0000\u0000\u0000\u00d3\u00d1\u0001\u0000\u0000\u0000"+
-		"\u00d3\u00d4\u0001\u0000\u0000\u0000\u00d4+\u0001\u0000\u0000\u0000\u00d5"+
-		"\u00d3\u0001\u0000\u0000\u0000\u00d6\u00db\u0003.\u0017\u0000\u00d7\u00d8"+
-		"\u0007\u0001\u0000\u0000\u00d8\u00da\u0003.\u0017\u0000\u00d9\u00d7\u0001"+
-		"\u0000\u0000\u0000\u00da\u00dd\u0001\u0000\u0000\u0000\u00db\u00d9\u0001"+
-		"\u0000\u0000\u0000\u00db\u00dc\u0001\u0000\u0000\u0000\u00dc-\u0001\u0000"+
-		"\u0000\u0000\u00dd\u00db\u0001\u0000\u0000\u0000\u00de\u00e3\u00030\u0018"+
-		"\u0000\u00df\u00e0\u0007\u0002\u0000\u0000\u00e0\u00e2\u00030\u0018\u0000"+
-		"\u00e1\u00df\u0001\u0000\u0000\u0000\u00e2\u00e5\u0001\u0000\u0000\u0000"+
-		"\u00e3\u00e1\u0001\u0000\u0000\u0000\u00e3\u00e4\u0001\u0000\u0000\u0000"+
-		"\u00e4/\u0001\u0000\u0000\u0000\u00e5\u00e3\u0001\u0000\u0000\u0000\u00e6"+
-		"\u00eb\u00032\u0019\u0000\u00e7\u00e8\u0007\u0003\u0000\u0000\u00e8\u00ea"+
-		"\u00032\u0019\u0000\u00e9\u00e7\u0001\u0000\u0000\u0000\u00ea\u00ed\u0001"+
-		"\u0000\u0000\u0000\u00eb\u00e9\u0001\u0000\u0000\u0000\u00eb\u00ec\u0001"+
-		"\u0000\u0000\u0000\u00ec1\u0001\u0000\u0000\u0000\u00ed\u00eb\u0001\u0000"+
-		"\u0000\u0000\u00ee\u00f3\u00034\u001a\u0000\u00ef\u00f0\u0007\u0004\u0000"+
-		"\u0000\u00f0\u00f2\u00034\u001a\u0000\u00f1\u00ef\u0001\u0000\u0000\u0000"+
-		"\u00f2\u00f5\u0001\u0000\u0000\u0000\u00f3\u00f1\u0001\u0000\u0000\u0000"+
-		"\u00f3\u00f4\u0001\u0000\u0000\u0000\u00f43\u0001\u0000\u0000\u0000\u00f5"+
-		"\u00f3\u0001\u0000\u0000\u0000\u00f6\u00f8\u0007\u0005\u0000\u0000\u00f7"+
-		"\u00f6\u0001\u0000\u0000\u0000\u00f7\u00f8\u0001\u0000\u0000\u0000\u00f8"+
-		"\u00f9\u0001\u0000\u0000\u0000\u00f9\u00fa\u00036\u001b\u0000\u00fa5\u0001"+
-		"\u0000\u0000\u0000\u00fb\u00ff\u0003:\u001d\u0000\u00fc\u00fe\u00038\u001c"+
-		"\u0000\u00fd\u00fc\u0001\u0000\u0000\u0000\u00fe\u0101\u0001\u0000\u0000"+
-		"\u0000\u00ff\u00fd\u0001\u0000\u0000\u0000\u00ff\u0100\u0001\u0000\u0000"+
-		"\u0000\u01007\u0001\u0000\u0000\u0000\u0101\u00ff\u0001\u0000\u0000\u0000"+
-		"\u0102\u0103\u0005F\u0000\u0000\u0103\u0104\u0003&\u0013\u0000\u0104\u0105"+
-		"\u0005G\u0000\u0000\u0105\u010c\u0001\u0000\u0000\u0000\u0106\u0108\u0005"+
-		"B\u0000\u0000\u0107\u0109\u0003<\u001e\u0000\u0108\u0107\u0001\u0000\u0000"+
-		"\u0000\u0108\u0109\u0001\u0000\u0000\u0000\u0109\u010a\u0001\u0000\u0000"+
-		"\u0000\u010a\u010c\u0005C\u0000\u0000\u010b\u0102\u0001\u0000\u0000\u0000"+
-		"\u010b\u0106\u0001\u0000\u0000\u0000\u010c9\u0001\u0000\u0000\u0000\u010d"+
-		"\u0114\u0003>\u001f\u0000\u010e\u0114\u0005Z\u0000\u0000\u010f\u0110\u0005"+
-		"B\u0000\u0000\u0110\u0111\u0003&\u0013\u0000\u0111\u0112\u0005C\u0000"+
-		"\u0000\u0112\u0114\u0001\u0000\u0000\u0000\u0113\u010d\u0001\u0000\u0000"+
-		"\u0000\u0113\u010e\u0001\u0000\u0000\u0000\u0113\u010f\u0001\u0000\u0000"+
-		"\u0000\u0114;\u0001\u0000\u0000\u0000\u0115\u011a\u0003&\u0013\u0000\u0116"+
-		"\u0117\u0005I\u0000\u0000\u0117\u0119\u0003&\u0013\u0000\u0118\u0116\u0001"+
-		"\u0000\u0000\u0000\u0119\u011c\u0001\u0000\u0000\u0000\u011a\u0118\u0001"+
-		"\u0000\u0000\u0000\u011a\u011b\u0001\u0000\u0000\u0000\u011b=\u0001\u0000"+
-		"\u0000\u0000\u011c\u011a\u0001\u0000\u0000\u0000\u011d\u011e\u0007\u0006"+
-		"\u0000\u0000\u011e?\u0001\u0000\u0000\u0000\u001aBDLXblz\u0086\u008f\u009a"+
-		"\u009e\u00a2\u00b0\u00be\u00cb\u00d3\u00db\u00e3\u00eb\u00f3\u00f7\u00ff"+
-		"\u0108\u010b\u0113\u011a";
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3]\u0122\4\2\t\2\4"+
+		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
+		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
+		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
+		"\4\32\t\32\4\33\t\33\4\34\t\34\4\35\t\35\4\36\t\36\4\37\t\37\4 \t \4!"+
+		"\t!\3\2\3\2\7\2E\n\2\f\2\16\2H\13\2\3\2\3\2\3\3\3\3\3\3\5\3O\n\3\3\3\3"+
+		"\3\3\4\3\4\3\4\3\4\3\5\3\5\3\5\3\5\5\5[\n\5\3\5\3\5\3\5\3\6\3\6\3\6\7"+
+		"\6c\n\6\f\6\16\6f\13\6\3\7\3\7\3\7\3\b\3\b\7\bm\n\b\f\b\16\bp\13\b\3\b"+
+		"\3\b\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\5\t}\n\t\3\n\3\n\3\n\3\n\3\n"+
+		"\3\13\3\13\3\13\3\13\3\13\5\13\u0089\n\13\3\f\3\f\3\f\3\f\3\f\3\f\3\f"+
+		"\5\f\u0092\n\f\3\r\3\r\3\r\3\r\3\r\3\r\3\16\3\16\3\16\5\16\u009d\n\16"+
+		"\3\16\3\16\5\16\u00a1\n\16\3\16\3\16\5\16\u00a5\n\16\3\16\3\16\3\16\3"+
+		"\17\3\17\3\17\3\17\3\17\3\17\3\17\3\17\3\17\5\17\u00b3\n\17\3\20\3\20"+
+		"\3\20\3\20\3\21\3\21\3\21\3\22\3\22\3\22\3\23\3\23\5\23\u00c1\n\23\3\23"+
+		"\3\23\3\24\3\24\3\25\3\25\3\26\3\26\3\26\7\26\u00cc\n\26\f\26\16\26\u00cf"+
+		"\13\26\3\27\3\27\3\27\7\27\u00d4\n\27\f\27\16\27\u00d7\13\27\3\30\3\30"+
+		"\3\30\7\30\u00dc\n\30\f\30\16\30\u00df\13\30\3\31\3\31\3\31\7\31\u00e4"+
+		"\n\31\f\31\16\31\u00e7\13\31\3\32\3\32\3\32\7\32\u00ec\n\32\f\32\16\32"+
+		"\u00ef\13\32\3\33\3\33\3\33\7\33\u00f4\n\33\f\33\16\33\u00f7\13\33\3\34"+
+		"\5\34\u00fa\n\34\3\34\3\34\3\35\3\35\7\35\u0100\n\35\f\35\16\35\u0103"+
+		"\13\35\3\36\3\36\3\36\3\36\3\36\3\36\5\36\u010b\n\36\3\36\5\36\u010e\n"+
+		"\36\3\37\3\37\3\37\3\37\3\37\3\37\5\37\u0116\n\37\3 \3 \3 \7 \u011b\n"+
+		" \f \16 \u011e\13 \3!\3!\3!\2\2\"\2\4\6\b\n\f\16\20\22\24\26\30\32\34"+
+		"\36 \"$&(*,.\60\62\64\668:<>@\2\t\5\2\13\r\17\17\22\22\3\2\66\67\4\2\64"+
+		"\65VW\3\2PQ\4\2OORS\4\2PQUU\5\2\7\b\n\n*+\2\u0123\2F\3\2\2\2\4K\3\2\2"+
+		"\2\6R\3\2\2\2\bV\3\2\2\2\n_\3\2\2\2\fg\3\2\2\2\16j\3\2\2\2\20|\3\2\2\2"+
+		"\22~\3\2\2\2\24\u0083\3\2\2\2\26\u008a\3\2\2\2\30\u0093\3\2\2\2\32\u0099"+
+		"\3\2\2\2\34\u00b2\3\2\2\2\36\u00b4\3\2\2\2 \u00b8\3\2\2\2\"\u00bb\3\2"+
+		"\2\2$\u00be\3\2\2\2&\u00c4\3\2\2\2(\u00c6\3\2\2\2*\u00c8\3\2\2\2,\u00d0"+
+		"\3\2\2\2.\u00d8\3\2\2\2\60\u00e0\3\2\2\2\62\u00e8\3\2\2\2\64\u00f0\3\2"+
+		"\2\2\66\u00f9\3\2\2\28\u00fd\3\2\2\2:\u010d\3\2\2\2<\u0115\3\2\2\2>\u0117"+
+		"\3\2\2\2@\u011f\3\2\2\2BE\5\4\3\2CE\5\b\5\2DB\3\2\2\2DC\3\2\2\2EH\3\2"+
+		"\2\2FD\3\2\2\2FG\3\2\2\2GI\3\2\2\2HF\3\2\2\2IJ\7\2\2\3J\3\3\2\2\2KL\5"+
+		"&\24\2LN\7\\\2\2MO\5\6\4\2NM\3\2\2\2NO\3\2\2\2OP\3\2\2\2PQ\7J\2\2Q\5\3"+
+		"\2\2\2RS\7H\2\2ST\7\b\2\2TU\7I\2\2U\7\3\2\2\2VW\5&\24\2WX\7\\\2\2XZ\7"+
+		"D\2\2Y[\5\n\6\2ZY\3\2\2\2Z[\3\2\2\2[\\\3\2\2\2\\]\7E\2\2]^\5\16\b\2^\t"+
+		"\3\2\2\2_d\5\f\7\2`a\7K\2\2ac\5\f\7\2b`\3\2\2\2cf\3\2\2\2db\3\2\2\2de"+
+		"\3\2\2\2e\13\3\2\2\2fd\3\2\2\2gh\5&\24\2hi\7\\\2\2i\r\3\2\2\2jn\7F\2\2"+
+		"km\5\20\t\2lk\3\2\2\2mp\3\2\2\2nl\3\2\2\2no\3\2\2\2oq\3\2\2\2pn\3\2\2"+
+		"\2qr\7G\2\2r\17\3\2\2\2s}\5\4\3\2t}\5\22\n\2u}\5\26\f\2v}\5\30\r\2w}\5"+
+		"\32\16\2x}\5 \21\2y}\5\"\22\2z}\5$\23\2{}\5\16\b\2|s\3\2\2\2|t\3\2\2\2"+
+		"|u\3\2\2\2|v\3\2\2\2|w\3\2\2\2|x\3\2\2\2|y\3\2\2\2|z\3\2\2\2|{\3\2\2\2"+
+		"}\21\3\2\2\2~\177\5\24\13\2\177\u0080\7[\2\2\u0080\u0081\5(\25\2\u0081"+
+		"\u0082\7J\2\2\u0082\23\3\2\2\2\u0083\u0088\7\\\2\2\u0084\u0085\7H\2\2"+
+		"\u0085\u0086\5(\25\2\u0086\u0087\7I\2\2\u0087\u0089\3\2\2\2\u0088\u0084"+
+		"\3\2\2\2\u0088\u0089\3\2\2\2\u0089\25\3\2\2\2\u008a\u008b\7\30\2\2\u008b"+
+		"\u008c\7D\2\2\u008c\u008d\5(\25\2\u008d\u008e\7E\2\2\u008e\u0091\5\16"+
+		"\b\2\u008f\u0090\7\31\2\2\u0090\u0092\5\16\b\2\u0091\u008f\3\2\2\2\u0091"+
+		"\u0092\3\2\2\2\u0092\27\3\2\2\2\u0093\u0094\7\32\2\2\u0094\u0095\7D\2"+
+		"\2\u0095\u0096\5(\25\2\u0096\u0097\7E\2\2\u0097\u0098\5\16\b\2\u0098\31"+
+		"\3\2\2\2\u0099\u009a\7\33\2\2\u009a\u009c\7D\2\2\u009b\u009d\5\34\17\2"+
+		"\u009c\u009b\3\2\2\2\u009c\u009d\3\2\2\2\u009d\u009e\3\2\2\2\u009e\u00a0"+
+		"\7J\2\2\u009f\u00a1\5(\25\2\u00a0\u009f\3\2\2\2\u00a0\u00a1\3\2\2\2\u00a1"+
+		"\u00a2\3\2\2\2\u00a2\u00a4\7J\2\2\u00a3\u00a5\5\36\20\2\u00a4\u00a3\3"+
+		"\2\2\2\u00a4\u00a5\3\2\2\2\u00a5\u00a6\3\2\2\2\u00a6\u00a7\7E\2\2\u00a7"+
+		"\u00a8\5\16\b\2\u00a8\33\3\2\2\2\u00a9\u00aa\5&\24\2\u00aa\u00ab\7\\\2"+
+		"\2\u00ab\u00ac\7[\2\2\u00ac\u00ad\5(\25\2\u00ad\u00b3\3\2\2\2\u00ae\u00af"+
+		"\5\24\13\2\u00af\u00b0\7[\2\2\u00b0\u00b1\5(\25\2\u00b1\u00b3\3\2\2\2"+
+		"\u00b2\u00a9\3\2\2\2\u00b2\u00ae\3\2\2\2\u00b3\35\3\2\2\2\u00b4\u00b5"+
+		"\5\24\13\2\u00b5\u00b6\7[\2\2\u00b6\u00b7\5(\25\2\u00b7\37\3\2\2\2\u00b8"+
+		"\u00b9\7\34\2\2\u00b9\u00ba\7J\2\2\u00ba!\3\2\2\2\u00bb\u00bc\7\35\2\2"+
+		"\u00bc\u00bd\7J\2\2\u00bd#\3\2\2\2\u00be\u00c0\7\36\2\2\u00bf\u00c1\5"+
+		"(\25\2\u00c0\u00bf\3\2\2\2\u00c0\u00c1\3\2\2\2\u00c1\u00c2\3\2\2\2\u00c2"+
+		"\u00c3\7J\2\2\u00c3%\3\2\2\2\u00c4\u00c5\t\2\2\2\u00c5\'\3\2\2\2\u00c6"+
+		"\u00c7\5*\26\2\u00c7)\3\2\2\2\u00c8\u00cd\5,\27\2\u00c9\u00ca\79\2\2\u00ca"+
+		"\u00cc\5,\27\2\u00cb\u00c9\3\2\2\2\u00cc\u00cf\3\2\2\2\u00cd\u00cb\3\2"+
+		"\2\2\u00cd\u00ce\3\2\2\2\u00ce+\3\2\2\2\u00cf\u00cd\3\2\2\2\u00d0\u00d5"+
+		"\5.\30\2\u00d1\u00d2\78\2\2\u00d2\u00d4\5.\30\2\u00d3\u00d1\3\2\2\2\u00d4"+
+		"\u00d7\3\2\2\2\u00d5\u00d3\3\2\2\2\u00d5\u00d6\3\2\2\2\u00d6-\3\2\2\2"+
+		"\u00d7\u00d5\3\2\2\2\u00d8\u00dd\5\60\31\2\u00d9\u00da\t\3\2\2\u00da\u00dc"+
+		"\5\60\31\2\u00db\u00d9\3\2\2\2\u00dc\u00df\3\2\2\2\u00dd\u00db\3\2\2\2"+
+		"\u00dd\u00de\3\2\2\2\u00de/\3\2\2\2\u00df\u00dd\3\2\2\2\u00e0\u00e5\5"+
+		"\62\32\2\u00e1\u00e2\t\4\2\2\u00e2\u00e4\5\62\32\2\u00e3\u00e1\3\2\2\2"+
+		"\u00e4\u00e7\3\2\2\2\u00e5\u00e3\3\2\2\2\u00e5\u00e6\3\2\2\2\u00e6\61"+
+		"\3\2\2\2\u00e7\u00e5\3\2\2\2\u00e8\u00ed\5\64\33\2\u00e9\u00ea\t\5\2\2"+
+		"\u00ea\u00ec\5\64\33\2\u00eb\u00e9\3\2\2\2\u00ec\u00ef\3\2\2\2\u00ed\u00eb"+
+		"\3\2\2\2\u00ed\u00ee\3\2\2\2\u00ee\63\3\2\2\2\u00ef\u00ed\3\2\2\2\u00f0"+
+		"\u00f5\5\66\34\2\u00f1\u00f2\t\6\2\2\u00f2\u00f4\5\66\34\2\u00f3\u00f1"+
+		"\3\2\2\2\u00f4\u00f7\3\2\2\2\u00f5\u00f3\3\2\2\2\u00f5\u00f6\3\2\2\2\u00f6"+
+		"\65\3\2\2\2\u00f7\u00f5\3\2\2\2\u00f8\u00fa\t\7\2\2\u00f9\u00f8\3\2\2"+
+		"\2\u00f9\u00fa\3\2\2\2\u00fa\u00fb\3\2\2\2\u00fb\u00fc\58\35\2\u00fc\67"+
+		"\3\2\2\2\u00fd\u0101\5<\37\2\u00fe\u0100\5:\36\2\u00ff\u00fe\3\2\2\2\u0100"+
+		"\u0103\3\2\2\2\u0101\u00ff\3\2\2\2\u0101\u0102\3\2\2\2\u01029\3\2\2\2"+
+		"\u0103\u0101\3\2\2\2\u0104\u0105\7H\2\2\u0105\u0106\5(\25\2\u0106\u0107"+
+		"\7I\2\2\u0107\u010e\3\2\2\2\u0108\u010a\7D\2\2\u0109\u010b\5> \2\u010a"+
+		"\u0109\3\2\2\2\u010a\u010b\3\2\2\2\u010b\u010c\3\2\2\2\u010c\u010e\7E"+
+		"\2\2\u010d\u0104\3\2\2\2\u010d\u0108\3\2\2\2\u010e;\3\2\2\2\u010f\u0116"+
+		"\5@!\2\u0110\u0116\7\\\2\2\u0111\u0112\7D\2\2\u0112\u0113\5(\25\2\u0113"+
+		"\u0114\7E\2\2\u0114\u0116\3\2\2\2\u0115\u010f\3\2\2\2\u0115\u0110\3\2"+
+		"\2\2\u0115\u0111\3\2\2\2\u0116=\3\2\2\2\u0117\u011c\5(\25\2\u0118\u0119"+
+		"\7K\2\2\u0119\u011b\5(\25\2\u011a\u0118\3\2\2\2\u011b\u011e\3\2\2\2\u011c"+
+		"\u011a\3\2\2\2\u011c\u011d\3\2\2\2\u011d?\3\2\2\2\u011e\u011c\3\2\2\2"+
+		"\u011f\u0120\t\b\2\2\u0120A\3\2\2\2\34DFNZdn|\u0088\u0091\u009c\u00a0"+
+		"\u00a4\u00b2\u00c0\u00cd\u00d5\u00dd\u00e5\u00ed\u00f5\u00f9\u0101\u010a"+
+		"\u010d\u0115\u011c";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
