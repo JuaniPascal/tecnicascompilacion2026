@@ -131,7 +131,15 @@ public final class SymbolTableBuilder extends CPPSubsetParserBaseVisitor<Void> {
             return;
         }
         if (ctx.ifStmt() != null) {
-            visitBlockStatements(ctx.ifStmt().block());
+            CPPSubsetParser.IfStmtContext ifs = ctx.ifStmt();
+            visitBlockStatements(ifs.block(0));
+            if (ifs.KW_ELSE() != null) {
+                visitBlockStatements(ifs.block(1));
+            }
+            return;
+        }
+        if (ctx.whileStmt() != null) {
+            visitBlockStatements(ctx.whileStmt().block());
             return;
         }
         if (ctx.returnStmt() != null) {

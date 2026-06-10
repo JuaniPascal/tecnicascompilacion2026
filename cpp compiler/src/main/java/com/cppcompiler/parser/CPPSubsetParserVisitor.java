@@ -1,4 +1,4 @@
-// Generated from C:/tmp/antlr-demo/cpp compiler/CPPSubsetParser.g4 by ANTLR 4.13.2
+// Generated from C:/Users/Escuela Cornu pc-1/Documents/GitHub/tecnicascompilacion2026/cpp compiler/CPPSubsetParser.g4 by ANTLR 4.13.2
 package com.cppcompiler.parser;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
@@ -76,6 +76,12 @@ public interface CPPSubsetParserVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitIfStmt(CPPSubsetParser.IfStmtContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link CPPSubsetParser#whileStmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitWhileStmt(CPPSubsetParser.WhileStmtContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link CPPSubsetParser#returnStmt}.
 	 * @param ctx the parse tree

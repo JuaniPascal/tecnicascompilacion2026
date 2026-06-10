@@ -29,23 +29,41 @@ import com.cppcompiler.parser.CPPSubsetParser.StatementContext;
 import com.cppcompiler.parser.CPPSubsetParser.TypeNameContext;
 import com.cppcompiler.parser.CPPSubsetParser.UnaryContext;
 import com.cppcompiler.parser.CPPSubsetParser.VarDeclContext;
+import com.cppcompiler.parser.CPPSubsetParser.WhileStmtContext;
 
-/** Genera TAC lineal a partir del árbol parseado. */
+/**
+ * Genera código de tres direcciones (TAC) a partir del árbol parseado.
+ *
+ * <p>Expresiones: bottom-up ({@code t0 = left op right}). Control de flujo: saltos condicionales
+ * y absolutos con etiquetas {@code L0}, {@code L1}, ...
+ */
 public final class TacGenerator {
 
     private final TacProgram out = new TacProgram();
-    private int tempCounter;
-    private int ifCounter;
+    private int tempCount;
+    private int labelCount;
 
     public TacProgram generate(ProgramContext ctx) {
         out.clear();
-        tempCounter = 0;
-        ifCounter = 0;
+        tempCount = 0;
+        labelCount = 0;
         out.emitComment("Código de tres direcciones generado");
         out.emit("PROGRAMA_INICIO:");
         out.emitComment("Declaración de variables globales");
         emitProgramLevel(ctx);
         return out;
+    }
+
+    private void emit(String s) {
+        out.emit(s);
+    }
+
+    private String newTemp() {
+        return "t" + (tempCount++);
+    }
+
+    private String newLabel() {
+        return "L" + (labelCount++);
     }
 
     private void emitProgramLevel(ProgramContext ctx) {
@@ -60,7 +78,7 @@ public final class TacGenerator {
                 emitFunc((FuncDeclContext) c);
             }
         }
-        out.emit("PROGRAMA_FIN:");
+        emit("PROGRAMA_FIN:");
     }
 
     private void emitGlobalVarDecl(VarDeclContext ctx) {
@@ -68,20 +86,20 @@ public final class TacGenerator {
         String name = ctx.IDENTIFIER().getText();
         if (ctx.arrayDim() != null) {
             String n = ctx.arrayDim().INT_LITERAL().getText();
-            out.emit("DECLARE " + name + "[" + n + "] " + type);
+            emit("DECLARE " + name + "[" + n + "] " + type);
         } else {
-            out.emit("DECLARE " + name + " " + type);
+            emit("DECLARE " + name + " " + type);
         }
     }
 
     private void emitFunc(FuncDeclContext ctx) {
         String fname = ctx.IDENTIFIER().getText();
-        out.emit("func_" + fname + ":");
+        emit("func_" + fname + ":");
         if (ctx.paramList() != null) {
             for (ParamContext p : ctx.paramList().param()) {
                 String pt = typeText(p.typeName());
                 String pn = p.IDENTIFIER().getText();
-                out.emit("PARAM " + pn + " " + pt);
+                emit("PARAM " + pn + " " + pt);
             }
         }
         emitBlock(ctx.block());
@@ -100,6 +118,8 @@ public final class TacGenerator {
             emitAssignment(ctx.assignment());
         } else if (ctx.ifStmt() != null) {
             emitIf(ctx.ifStmt());
+        } else if (ctx.whileStmt() != null) {
+            emitWhile(ctx.whileStmt());
         } else if (ctx.returnStmt() != null) {
             emitReturn(ctx.returnStmt());
         } else if (ctx.block() != null) {
@@ -112,16 +132,16 @@ public final class TacGenerator {
         String name = ctx.IDENTIFIER().getText();
         if (ctx.arrayDim() != null) {
             String n = ctx.arrayDim().INT_LITERAL().getText();
-            out.emit("DECLARE " + name + "[" + n + "] " + type);
+            emit("DECLARE " + name + "[" + n + "] " + type);
         } else {
-            out.emit("DECLARE " + name + " " + type);
+            emit("DECLARE " + name + " " + type);
         }
     }
 
     private void emitAssignment(AssignmentContext ctx) {
         String rhs = genExpr(ctx.expr());
         String lhs = genLvalue(ctx.lvalue());
-        out.emit(lhs + " = " + rhs);
+        emit(lhs + " = " + rhs);
     }
 
     private String genLvalue(LvalueContext ctx) {
@@ -133,24 +153,50 @@ public final class TacGenerator {
         return id;
     }
 
+    /**
+     * If / If-Else: {@code if cond goto Ltrue}, {@code goto Lfalse}, cuerpo then, {@code goto Lend},
+     * rama else (si existe), {@code Lend}.
+     */
     private void emitIf(IfStmtContext ctx) {
-        int id = ++ifCounter;
+        String lTrue = newLabel();
+        String lFalse = newLabel();
+        String lEnd = newLabel();
         String cond = genExpr(ctx.expr());
-        String thenL = "THEN_" + id;
-        String endL = "END_IF_" + id;
-        out.emit("if " + cond + " goto " + thenL);
-        out.emit("goto " + endL);
-        out.emit(thenL + ":");
+        emit("if " + cond + " goto " + lTrue);
+        emit("goto " + lFalse);
+        emit(lTrue + ":");
+        emitBlock(ctx.block(0));
+        emit("goto " + lEnd);
+        emit(lFalse + ":");
+        if (ctx.KW_ELSE() != null) {
+            emitBlock(ctx.block(1));
+        }
+        emit(lEnd + ":");
+    }
+
+    /**
+     * While: {@code Lstart:}, condición, cuerpo, {@code goto Lstart}, {@code Lfalse:} para salir.
+     */
+    private void emitWhile(WhileStmtContext ctx) {
+        String lStart = newLabel();
+        String lTrue = newLabel();
+        String lFalse = newLabel();
+        emit(lStart + ":");
+        String cond = genExpr(ctx.expr());
+        emit("if " + cond + " goto " + lTrue);
+        emit("goto " + lFalse);
+        emit(lTrue + ":");
         emitBlock(ctx.block());
-        out.emit(endL + ":");
+        emit("goto " + lStart);
+        emit(lFalse + ":");
     }
 
     private void emitReturn(ReturnStmtContext ctx) {
         if (ctx.expr() != null) {
             String v = genExpr(ctx.expr());
-            out.emit("return " + v);
+            emit("return " + v);
         } else {
-            out.emit("return");
+            emit("return");
         }
     }
 
@@ -235,7 +281,7 @@ public final class TacGenerator {
             return op + operand;
         }
         String t = newTemp();
-        out.emit(t + " = " + op + operand);
+        emit(t + " = " + op + operand);
         return t;
     }
 
@@ -257,7 +303,7 @@ public final class TacGenerator {
                     v = v + "[" + idx + "]";
                 } else {
                     String t = newTemp();
-                    out.emit(t + " = " + v + "[" + idx + "]");
+                    emit(t + " = " + v + "[" + idx + "]");
                     v = t;
                 }
             } else if (suf.LPAREN() != null) {
@@ -275,9 +321,9 @@ public final class TacGenerator {
                 String func = stripCalls(v);
                 String argStr = args.toString();
                 if (argStr.isEmpty()) {
-                    out.emit("CALL func_" + func);
+                    emit("CALL func_" + func);
                 } else {
-                    out.emit("CALL func_" + func + ", " + argStr);
+                    emit("CALL func_" + func + ", " + argStr);
                 }
                 v = "RETURN_VALUE";
             }
@@ -285,7 +331,6 @@ public final class TacGenerator {
         return v;
     }
 
-    /** Si v es una cadena tipo nombre[...] o tN, extrae el identificador base de llamada. */
     private static String stripCalls(String v) {
         int idx = v.indexOf('[');
         if (idx > 0) {
@@ -320,6 +365,7 @@ public final class TacGenerator {
         return "false";
     }
 
+    /** Bottom-up: evalúa operandos y emite {@code tN = left op right}. */
     private String binop(String left, String op, String right) {
         if (isFoldableLiteral(left, op, right)) {
             String folded = foldConst(left, op, right);
@@ -328,7 +374,7 @@ public final class TacGenerator {
             }
         }
         String t = newTemp();
-        out.emit(t + " = " + left + " " + op + " " + right);
+        emit(t + " = " + left + " " + op + " " + right);
         return t;
     }
 
@@ -416,10 +462,6 @@ public final class TacGenerator {
             return r != 0 ? "1" : "0";
         }
         return String.valueOf(r);
-    }
-
-    private String newTemp() {
-        return "t" + (++tempCounter);
     }
 
     private static String typeText(TypeNameContext t) {

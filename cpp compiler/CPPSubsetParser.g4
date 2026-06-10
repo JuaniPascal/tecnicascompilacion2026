@@ -23,6 +23,7 @@ statement
     : varDecl
     | assignment
     | ifStmt
+    | whileStmt
     | returnStmt
     | block
     ;
@@ -31,7 +32,9 @@ assignment : lvalue ASSIGN expr SEMI ;
 
 lvalue : IDENTIFIER ( LBRACK expr RBRACK )? ;
 
-ifStmt : KW_IF LPAREN expr RPAREN block ;
+ifStmt : KW_IF LPAREN expr RPAREN block ( KW_ELSE block )? ;
+
+whileStmt : KW_WHILE LPAREN expr RPAREN block ;
 
 returnStmt : KW_RETURN expr? SEMI ;
 
