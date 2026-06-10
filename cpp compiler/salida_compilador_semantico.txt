@@ -4,7 +4,7 @@
 ##                                                                            ##
 ################################################################################
 
-Fecha y hora: 2026-05-13T18:42:50.9667185
+Fecha y hora: 2026-05-13T19:55:44.358719
 Archivo fuente: C:\Users\Juani\Documents\GitHub\tecnicascompilacion2026\cpp compiler\profesora.cpp
 Informe generado: C:\Users\Juani\Documents\GitHub\tecnicascompilacion2026\cpp compiler\salida_compilador_semantico.txt
 

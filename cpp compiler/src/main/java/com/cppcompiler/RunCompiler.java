@@ -110,7 +110,7 @@ public final class RunCompiler {
             return;
         }
 
-        printAndSaveParseTree(tree, parser, path, showGui);
+        boolean guiShown = printAndSaveParseTree(tree, parser, path, showGui);
 
         SymbolTableBuilder sym = new SymbolTableBuilder();
         sym.visit(tree);
@@ -133,6 +133,14 @@ public final class RunCompiler {
 
         if (sem.diagnostics().hasErrors()) {
             writeSemanticReport(path, sem.diagnostics().errors(), sem.diagnostics().warnings());
+            // Si la ventana del árbol está abierta, NO llamamos System.exit para no
+            // matar la JVM (y con ella la ventana). El proceso queda vivo gracias al
+            // EDT de Swing y termina cuando el usuario cierra la ventana.
+            if (guiShown) {
+                System.out.println("Compilacion detenida por errores semanticos. Cerrá la ventana del árbol para terminar.");
+                System.out.flush();
+                return;
+            }
             System.exit(1);
             return;
         }
@@ -166,8 +174,13 @@ public final class RunCompiler {
                         "Archivo: ejemplo_codigo_optimizado.txt"));
     }
 
-    /** Imprime el árbol en formato LISP, lo guarda en disco y abre la GUI salvo --no-gui. */
-    private static void printAndSaveParseTree(
+    /**
+     * Imprime el árbol en formato LISP, lo guarda en disco y abre la GUI salvo --no-gui.
+     *
+     * @return {@code true} si la ventana gráfica del árbol llegó a abrirse (entonces el
+     *     llamador NO debe invocar {@link System#exit(int)} para no matar el JFrame).
+     */
+    private static boolean printAndSaveParseTree(
             ProgramContext tree, CPPSubsetParser parser, Path sourceFile, boolean showGui) {
         List<String> ruleNames = Arrays.asList(parser.getRuleNames());
         String lisp = tree.toStringTree(parser);
@@ -191,13 +204,14 @@ public final class RunCompiler {
         System.out.flush();
 
         if (!showGui) {
-            return;
+            return false;
         }
         try {
             Class<?> treesCls = Class.forName("org.antlr.v4.gui.Trees");
             treesCls.getMethod("inspect", org.antlr.v4.runtime.tree.Tree.class, List.class)
                     .invoke(null, tree, ruleNames);
             System.out.println("Ventana grafica del arbol sintactico abierta (cerrarla para terminar el proceso).");
+            return true;
         } catch (ClassNotFoundException ex) {
             System.err.println(
                     "Aviso: org.antlr.v4.gui.Trees no esta en el classpath; se omite la ventana. "
@@ -212,6 +226,7 @@ public final class RunCompiler {
                 System.err.println("Aviso: no se pudo abrir la ventana del arbol: " + cause.getMessage());
             }
         }
+        return false;
     }
 
     private static Path semanticReportPath(Path sourceFile) {
